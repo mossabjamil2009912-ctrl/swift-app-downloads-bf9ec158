@@ -1020,9 +1020,10 @@ export default function SldDiagram({ params, number, actions }: Props) {
         {controls}
       </div>
 
-      <div className="mt-3">{canvas}</div>
+      <div className="mt-3">{flowBar}</div>
+      <div className="mt-2">{canvas}</div>
       <p className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، واضغط أي مكوّن لعرض مواصفاته الفنية.
+        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، واضغط أي مكوّن لعرض مواصفاته الفنية، وزر الصورة لحفظ المخطط بدقة عالية.
       </p>
 
 
