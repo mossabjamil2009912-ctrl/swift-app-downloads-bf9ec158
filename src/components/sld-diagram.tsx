@@ -457,9 +457,12 @@ export function SldSvg({
               `Icu ${ac.phase3 || ac.breakerA > 63 ? 15 : 6} kA`,
               "AC SPD Type 2",
             ]}
-
             accent={C.ac}
+            id="ac"
+            pick={pick}
+            active={active === "ac"}
           />
+
           <BreakerSymbol x={xAc + wAc - 24} y={dcY} />
           <SpdSymbol x={xAc + 22} y={dcY + 26} />
         </>
