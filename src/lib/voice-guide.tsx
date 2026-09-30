@@ -263,9 +263,10 @@ export function setScreenSpeech(text: string) { screenText = text || ""; }
 
 /** يعيد نطق جملة الشاشة المعروضة حالياً من البداية. */
 export async function replaySpeech(): Promise<boolean> {
-  if (screenText) return speak(screenText, true);
-  if (!lastSpoken) return false;
-  return speak(lastSpoken, lastSpokenLocalized);
+  // ينطق نص الشاشة المعروضة حالياً فقط؛ لا يرتد أبداً إلى آخر صوت قديم.
+  const text = screenText || WELCOME[currentLang()];
+  if (!text) return false;
+  return speak(text, true);
 }
 
 /** ينطق النص بالصوت النسائي الوحيد للتطبيق. لا يوجد أي صوت بديل من المتصفح. */
@@ -328,7 +329,7 @@ export function setScreenSpeechSilently(key: string, text: string) {
   stopSpeaking();
   setScreenSpeech(text);
   lastScreen = key;
-  silentNext = false;
+  // لا نصفّر silentNext هنا: الرجوع يظل صامتاً، والنص المسجّل يعمل فقط عبر زر «إعادة السماع».
 }
 
 /** ينطق رسالة الشاشة فور ظهورها؛ التنقل السريع يلغي النطق بصمت. */
@@ -336,7 +337,7 @@ export function speakScreen(key: string, text: string) {
   if (!text) return;
   // نسجّل نص الشاشة أولاً حتى يعمل زر «إعادة السماع» على الشاشة المعروضة دائماً.
   setScreenSpeech(text);
-  if (silentNext) { silentNext = false; stopSpeaking(); lastScreen = key; pendingKey = ""; return; }
+  if (silentNext) { silentNext = false; stopSpeaking(); lastScreen = key; return; }
   if (key === lastScreen) return;
   stopSpeaking();
   lastScreen = key;
