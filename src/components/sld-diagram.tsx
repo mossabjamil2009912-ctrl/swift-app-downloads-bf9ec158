@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Download, Expand, LineChart, Minus, Move, Network, Plus, RotateCcw, Shrink, ShoppingCart } from "lucide-react";
+import { ArrowRight, Download, Expand, LineChart, Minus, Move, Network, Palette, Plus, RotateCcw, Shrink, ShoppingCart, X } from "lucide-react";
 import { buildSld, type SldModel } from "@/lib/sld-engine";
+import { cableCalcs, inspectorItems, type CableCalc } from "@/lib/sld-annotations";
 import { downloadSldSheet } from "@/lib/sld-pdf";
 import logoAsset from "@/assets/actes-logo-sld.png.asset.json";
+
 
 /**
  * ألوان الرسم الكهربائي القياسية (IEC): ليست ألوان واجهة بل دلالات هندسية
