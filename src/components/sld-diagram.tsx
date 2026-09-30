@@ -344,6 +344,7 @@ export function SldSvg({
       {/* ── جانب التيار المستمر: سلاسل الألواح ───────────────────────────── */}
       {pv && (
         <g
+          opacity={opPv}
           style={pick ? { cursor: "pointer" } : undefined}
           onClick={pick ? () => pick("pv") : undefined}
         >
