@@ -4,7 +4,7 @@ import QRCode from "qrcode";
 import { CATEGORIES, findProduct, matchCompatibleProducts, productsByCategory, quickSpecs, type Product, type ProductCategory, type ProductFile } from "@/lib/products-data";
 import { isVoiceOn, isVoicePlatform, prepareSpeech, speakScreen, speakScreenAfterCurrent, stopSpeaking } from "@/lib/voice-guide";
 import ProductVideoPlayer from "@/components/product-video";
-import { getProductVideo, videoIntroNarration } from "@/lib/product-video";
+import { afterVideoNarration, getProductVideo, videoIntroNarration } from "@/lib/product-video";
 import { hasModelDatasheet, openInverterDatasheet, downloadInverterDatasheet } from "@/lib/inverter-datasheet-pdf";
 import { openDatasheetEn, downloadDatasheetEn } from "@/lib/datasheet-pdf-en";
 
