@@ -342,12 +342,17 @@ export const NAME_PHRASES_EN: [string, string][] = [
   ["متكامل", "Integrated"],
   ["سلسلة", "Series"],
   ["مع", "with"],
-  ["و", " and "],
+  ["وحدة", "Module"],
+  ["منزلية", "Residential"],
+  ["ذكية", "Smart"],
+  ["عالي الجهد", "High Voltage"],
 ];
 
 const applyPhrases = (text: string, phrases: [string, string][]) => {
   let out = text;
   for (const [ar, en] of phrases) out = out.split(ar).join(en);
+  // واو العطف المنفردة فقط (لا تلمس الكلمات التي تبدأ بواو)
+  out = out.replace(/(^|\s)و(\s)/g, "$1and$2").replace(/\sو(?=[A-Za-z0-9])/g, " and ");
   return out.replace(/\s{2,}/g, " ").trim();
 };
 
