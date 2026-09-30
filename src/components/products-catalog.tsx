@@ -471,7 +471,7 @@ function ProductDetail({ product, onOpen, onBack, backLabel }: { product: Produc
             <div className="mb-3 space-y-2.5">
               <div className="rounded-xl border border-brand/40 bg-brand/5 p-3">
                 <h3 className="mb-2 flex items-center gap-2 text-sm font-black text-navy">
-                  <FileText className="size-4 text-brand" /> كتالوج الموديل ({product.model} — {product.power})
+                  <FileText className="size-4 text-brand" /> {catalogCardTitleAr(product)}
                 </h3>
                 <div className="flex gap-1.5">
                   <button type="button" onClick={() => openInverterDatasheet(product)} className="inline-flex items-center gap-1 rounded-full bg-skyline px-3 py-1 text-xs font-bold text-skyline-foreground transition hover:opacity-90"><Eye className="size-3.5" /> فتح</button>
@@ -480,7 +480,7 @@ function ProductDetail({ product, onOpen, onBack, backLabel }: { product: Produc
               </div>
               <div className="rounded-xl border border-skyline/40 bg-skyline/5 p-3" dir="ltr">
                 <h3 className="mb-2 flex items-center gap-2 text-sm font-black text-navy">
-                  <FileText className="size-4 text-skyline" /> Model Datasheet — English ({product.model} — {product.power})
+                  <FileText className="size-4 text-skyline" /> {catalogCardTitleEn(product)}
                 </h3>
                 <div className="flex gap-1.5">
                   <button type="button" onClick={() => openDatasheetEn(product)} className="inline-flex items-center gap-1 rounded-full bg-skyline px-3 py-1 text-xs font-bold text-skyline-foreground transition hover:opacity-90"><Eye className="size-3.5" /> Open</button>
