@@ -1477,11 +1477,19 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
   const studyFresh = Boolean(view.study?.fresh);
   useEffect(() => { setShowStudyOnly(studyFresh); }, [studyFresh, view.study?.number]);
   const studyScreen = studyFresh && showStudyOnly && view.study;
+  // شاشة المخطط الكهربائي تُعرض وحدها كاملة عند طلبها
+  const [showSldOnly, setShowSldOnly] = useState(true);
+  const sldParams = view.sld?.params || null;
+  useEffect(() => { setShowSldOnly(true); }, [view.sld?.number, Boolean(sldParams)]);
+  const sldScreen = Boolean(sldParams) && showSldOnly && !studyScreen;
   const hasOutputs = Boolean(view.quote || view.study || view.sld || view.specs.length);
   // شاشة عرض السعر الرسمي: عنوان ثابت بدل نص المتابعة القادم من المحرك
-  const title = studyScreen
+  const title = sldScreen
+    ? "المخطط الكهربائي أحادي الخط (SLD)"
+    : studyScreen
     ? "دراسة المحاكاة الشمسية PVsyst"
     : view.quote ? "عرض سعر رسمي" : hasOutputs ? view.heading : STEP_LABELS[step] || view.heading;
+
   const visibleOptions = useMemo(() => view.options.filter((option) => !BACK_OPTION_TITLES.has(option.title.trim())), [view.options]);
   const isProjectSelection = step === "menu_sys3";
   // شاشة حلول الطاقة: بطاقتان عريضتان بدل زرين صغيرين
