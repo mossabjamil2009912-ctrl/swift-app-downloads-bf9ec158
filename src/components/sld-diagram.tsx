@@ -219,9 +219,37 @@ function WireTag({ x, y, text: label, color }: { x: number; y: number; text: str
   );
 }
 
+/** رمز مفتاح عزل ميكانيكي (DC Rotary Isolator) للفصل اليدوي أثناء الصيانة. */
+function IsolatorSymbol({ x, y, color }: { x: number; y: number; color: string }) {
+  return (
+    <g>
+      <line x1={x} y1={y - 13} x2={x} y2={y - 6} stroke={color} strokeWidth={1.4} />
+      <line x1={x} y1={y - 6} x2={x + 10} y2={y + 7} stroke={color} strokeWidth={1.6} />
+      <line x1={x} y1={y + 7} x2={x} y2={y + 14} stroke={color} strokeWidth={1.4} />
+      <circle cx={x} cy={y - 6} r={1.8} fill={color} />
+      <circle cx={x} cy={y + 7} r={1.8} fill={color} />
+      <text x={x + 13} y={y + 2} fontFamily={F} fontSize={6.6} fontWeight={700} fill={color}>ISO</text>
+    </g>
+  );
+}
+
+/** رمز قاطع تسريب أرضي من النوع B (RCD Type B) الإلزامي للإنفرترات. */
+function RcdSymbol({ x, y, color }: { x: number; y: number; color: string }) {
+  return (
+    <g>
+      <rect x={x - 9} y={y - 10} width={18} height={20} fill={C.fill} stroke={color} strokeWidth={1.3} />
+      <circle cx={x} cy={y - 2} r={4.6} fill="none" stroke={color} strokeWidth={1.2} />
+      <line x1={x - 6} y1={y + 6} x2={x + 6} y2={y + 6} stroke={color} strokeWidth={1.2} />
+      <text x={x} y={y + 18} textAnchor="middle" fontFamily={F} fontSize={6.4} fontWeight={700} fill={color}>RCD-B</text>
+    </g>
+  );
+}
+
+export type SldFlow = "none" | "day" | "night" | "outage";
+
 /** يرسم المخطط الأحادي الكامل داخل عنصر SVG واحد. */
 export function SldSvg({
-  m, fit = false, theme = "paper", pick, active, calcs,
+  m, fit = false, theme = "paper", pick, active, calcs, flow = "none",
 }: {
   m: SldModel;
   fit?: boolean;
@@ -229,6 +257,7 @@ export function SldSvg({
   pick?: ((id: string) => void) | undefined;
   active?: string | null | undefined;
   calcs?: CableCalc[] | undefined;
+  flow?: SldFlow;
 }) {
   const W = 1240;
   const drawnStrings = Math.min(m.pv?.strings || 1, 4);
