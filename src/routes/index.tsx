@@ -1593,7 +1593,7 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
 
             {isQuoteActions ? (
               <div className="mt-6 border-t border-border pt-5">
-                <QuoteActions onPick={onPick} />
+                <QuoteActions onPick={onPick} hideEngineering={step === "res_quote_ask"} />
               </div>
             ) : (visibleOptions.length > 0 || showEntry) && (
               <div className="mt-6 space-y-5 border-t border-border pt-5">
@@ -1631,10 +1631,13 @@ const QUOTE_ACTIONS: { id: string; title: string; note: string; icon: ReactNode;
   { id: "aq_sld", title: "مخطط SLD", note: "المخطط الكهربائي الأحادي", icon: <Network />, className: "bg-field text-field-foreground", chip: "bg-field-foreground/15" },
 ];
 
-function QuoteActions({ onPick }: { onPick: (value: string) => void }) {
+function QuoteActions({ onPick, hideEngineering = false }: { onPick: (value: string) => void; hideEngineering?: boolean }) {
+  const actions = hideEngineering
+    ? QUOTE_ACTIONS.filter((a) => a.id !== "aq_study" && a.id !== "aq_sld")
+    : QUOTE_ACTIONS;
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {QUOTE_ACTIONS.map((action) => (
+    <div className={`grid gap-3 sm:grid-cols-2 ${hideEngineering ? "" : "xl:grid-cols-4"}`}>
+      {actions.map((action) => (
         <button
           key={action.id}
           type="button"
