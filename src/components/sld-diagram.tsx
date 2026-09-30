@@ -482,8 +482,19 @@ export default function SldDiagram({ params, number, actions }: Props) {
       dir="ltr"
     >
       <div
-        className="h-full w-full"
-        style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "50% 50%" }}
+        className={rot.on ? "absolute" : "h-full w-full"}
+        style={
+          rot.on
+            ? {
+                width: rot.w,
+                height: rot.h,
+                left: "50%",
+                top: "50%",
+                transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) rotate(90deg) scale(${zoom})`,
+                transformOrigin: "50% 50%",
+              }
+            : { transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "50% 50%" }
+        }
       >
         <SldSvg m={model} fit />
       </div>
