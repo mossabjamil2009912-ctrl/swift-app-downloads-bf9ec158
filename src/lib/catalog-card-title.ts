@@ -37,7 +37,7 @@ function brandEn(brand: string) {
 function shortRating(p: TitleProduct) {
   if (p.category === "batteries") {
     const ah = p.name.match(/([\d.]+\s*Ah)/i);
-    if (ah) return ah[1].replace(/\s+/g, "");
+    if (ah?.[1]) return ah[1].replace(/\s+/g, "");
   }
   return p.power.replace(/\s+/g, "").replace(/[-–—]/g, "–");
 }
