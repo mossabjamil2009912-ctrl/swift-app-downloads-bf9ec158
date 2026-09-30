@@ -591,7 +591,7 @@ export function SldSvg({
         return (
           <>
             {m.grid && (
-              <>
+              <g opacity={opGrid}>
                 <Block
                   x={xOut}
                   y={dcY - 76}
