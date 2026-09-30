@@ -5,7 +5,7 @@ import { CATEGORIES, findProduct, matchCompatibleProducts, productsByCategory, q
 import { isVoiceOn, isVoicePlatform, speakScreen, speakScreenAfterCurrent, stopSpeaking } from "@/lib/voice-guide";
 import ProductVideoPlayer from "@/components/product-video";
 import { getProductVideo, videoIntroNarration } from "@/lib/product-video";
-import { hasModelDatasheet, openInverterDatasheet } from "@/lib/inverter-datasheet-pdf";
+import { hasModelDatasheet, openInverterDatasheet, downloadInverterDatasheet } from "@/lib/inverter-datasheet-pdf";
 
 
 // خدمة معلوماتية فقط — لا تحتوي أي زر بيع أو ربط بمسارات عروض الأسعار.
@@ -207,8 +207,6 @@ function Bullets({ items }: { items: string[] }) {
 
 /** روابط الملفات مجمّعة حسب نوع الوثيقة الرسمية. */
 const FILE_GROUPS: { kind: ProductFile["kind"]; title: string }[] = [
-  { kind: "Datasheet", title: "صحيفة البيانات الفنية (Datasheet)" },
-  { kind: "Catalog", title: "الكتالوج الرسمي (Catalog)" },
   { kind: "User Manual", title: "دليل الاستخدام (User Manual)" },
   { kind: "Installation Manual", title: "دليل التركيب (Installation Manual)" },
   { kind: "Certificate", title: "الشهادات (Certificates)" },
@@ -468,13 +466,13 @@ function ProductDetail({ product, onOpen, onBack, backLabel }: { product: Produc
         <Section icon={<FileText />} title="الكتالوجات والملفات">
           {hasModelDatasheet(product) && (
             <div className="mb-3 rounded-xl border border-brand/40 bg-brand/5 p-3">
-              <h3 className="mb-1 text-xs font-black text-navy">كتالوج خاص بهذا الموديل — {product.power}</h3>
-              <p className="mb-2 text-[11px] leading-5 text-muted-foreground">
-                ملف PDF رسمي بهوية أكتس يحتوي مواصفات {product.model} بقدرة {product.power} فقط، دون بقية موديلات السلسلة.
-              </p>
-              <button type="button" onClick={() => openInverterDatasheet(product)} className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-1.5 text-xs font-bold text-brand-foreground transition hover:opacity-90">
-                <Download className="size-3.5" /> كتالوج الموديل PDF
-              </button>
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-black text-navy">
+                <FileText className="size-4 text-brand" /> كتالوج الموديل ({product.model} — {product.power})
+              </h3>
+              <div className="flex gap-1.5">
+                <button type="button" onClick={() => openInverterDatasheet(product)} className="inline-flex items-center gap-1 rounded-full bg-skyline px-3 py-1 text-xs font-bold text-skyline-foreground transition hover:opacity-90"><Eye className="size-3.5" /> فتح</button>
+                <button type="button" onClick={() => downloadInverterDatasheet(product)} className="inline-flex items-center gap-1 rounded-full bg-navy-soft px-3 py-1 text-xs font-bold text-navy transition hover:opacity-90"><Download className="size-3.5" /> تحميل</button>
+              </div>
             </div>
           )}
           <div className="space-y-3">
