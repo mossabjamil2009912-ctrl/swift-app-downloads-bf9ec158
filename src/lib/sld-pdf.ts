@@ -5,7 +5,7 @@ import type { SldModel } from "./sld-engine";
  * إطار الرسم + كتلة بيانات اللوحة (Title Block) بشعار أكتس + جدول الكابلات
  * وحصر الأصناف والملاحظات. يعتمد على نفس الرسم الظاهر في الشاشة.
  */
-const LOGO = "/__l5e/assets-v1/3d82f8f7-8abe-40bf-8193-8a144f677cdd/actes-logo-sld.png";
+const LOGO = "/__l5e/assets-v1/7f7c6118-a1fd-4583-a98e-896c28b86668/actes-logo-sld.png";
 
 const esc = (s: unknown) =>
   String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
