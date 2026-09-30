@@ -410,7 +410,7 @@ export function SldSvg({
             {inv.model}
           </text>
           <text x={xInv - 6} y={dcY + 32} textAnchor="end" fontFamily={F} fontSize={7.6} fill={C.dc}>DC IN</text>
-          <text x={xInv + wInv + 6} y={dcY - 4} fontFamily={F} fontSize={7.6} fill={C.ac}>GRID OUT</text>
+          <text x={xInv + wInv + 6} y={dcY - 18} fontFamily={F} fontSize={7.6} fill={C.ac}>GRID OUT</text>
           {bat && (
             <text x={xInv + wInv + 6} y={dcY + 40} fontFamily={F} fontSize={7.6} fill={C.ac}>EPS / BACKUP</text>
           )}
