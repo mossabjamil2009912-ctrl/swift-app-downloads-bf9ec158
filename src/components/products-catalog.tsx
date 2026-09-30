@@ -6,6 +6,7 @@ import { isVoiceOn, isVoicePlatform, speakScreen, speakScreenAfterCurrent, stopS
 import ProductVideoPlayer from "@/components/product-video";
 import { getProductVideo, videoIntroNarration } from "@/lib/product-video";
 import { hasModelDatasheet, openInverterDatasheet, downloadInverterDatasheet } from "@/lib/inverter-datasheet-pdf";
+import { openDatasheetEn, downloadDatasheetEn } from "@/lib/datasheet-pdf-en";
 
 
 // خدمة معلوماتية فقط — لا تحتوي أي زر بيع أو ربط بمسارات عروض الأسعار.
@@ -465,13 +466,24 @@ function ProductDetail({ product, onOpen, onBack, backLabel }: { product: Produc
         )}
         <Section icon={<FileText />} title="الكتالوجات والملفات">
           {hasModelDatasheet(product) && (
-            <div className="mb-3 rounded-xl border border-brand/40 bg-brand/5 p-3">
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-black text-navy">
-                <FileText className="size-4 text-brand" /> كتالوج الموديل ({product.model} — {product.power})
-              </h3>
-              <div className="flex gap-1.5">
-                <button type="button" onClick={() => openInverterDatasheet(product)} className="inline-flex items-center gap-1 rounded-full bg-skyline px-3 py-1 text-xs font-bold text-skyline-foreground transition hover:opacity-90"><Eye className="size-3.5" /> فتح</button>
-                <button type="button" onClick={() => downloadInverterDatasheet(product)} className="inline-flex items-center gap-1 rounded-full bg-navy-soft px-3 py-1 text-xs font-bold text-navy transition hover:opacity-90"><Download className="size-3.5" /> تحميل</button>
+            <div className="mb-3 space-y-2.5">
+              <div className="rounded-xl border border-brand/40 bg-brand/5 p-3">
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-black text-navy">
+                  <FileText className="size-4 text-brand" /> كتالوج الموديل ({product.model} — {product.power})
+                </h3>
+                <div className="flex gap-1.5">
+                  <button type="button" onClick={() => openInverterDatasheet(product)} className="inline-flex items-center gap-1 rounded-full bg-skyline px-3 py-1 text-xs font-bold text-skyline-foreground transition hover:opacity-90"><Eye className="size-3.5" /> فتح</button>
+                  <button type="button" onClick={() => downloadInverterDatasheet(product)} className="inline-flex items-center gap-1 rounded-full bg-navy-soft px-3 py-1 text-xs font-bold text-navy transition hover:opacity-90"><Download className="size-3.5" /> تحميل</button>
+                </div>
+              </div>
+              <div className="rounded-xl border border-skyline/40 bg-skyline/5 p-3" dir="ltr">
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-black text-navy">
+                  <FileText className="size-4 text-skyline" /> Model Datasheet — English ({product.model} — {product.power})
+                </h3>
+                <div className="flex gap-1.5">
+                  <button type="button" onClick={() => openDatasheetEn(product)} className="inline-flex items-center gap-1 rounded-full bg-skyline px-3 py-1 text-xs font-bold text-skyline-foreground transition hover:opacity-90"><Eye className="size-3.5" /> Open</button>
+                  <button type="button" onClick={() => downloadDatasheetEn(product)} className="inline-flex items-center gap-1 rounded-full bg-navy-soft px-3 py-1 text-xs font-bold text-navy transition hover:opacity-90"><Download className="size-3.5" /> Download</button>
+                </div>
               </div>
             </div>
           )}
