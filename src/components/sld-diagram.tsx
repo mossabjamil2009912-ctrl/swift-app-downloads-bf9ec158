@@ -202,7 +202,16 @@ function WireTag({ x, y, text: label, color }: { x: number; y: number; text: str
 }
 
 /** يرسم المخطط الأحادي الكامل داخل عنصر SVG واحد. */
-export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
+export function SldSvg({
+  m, fit = false, theme = "paper", pick, active, calcs,
+}: {
+  m: SldModel;
+  fit?: boolean;
+  theme?: SldTheme;
+  pick?: ((id: string) => void) | undefined;
+  active?: string | null | undefined;
+  calcs?: CableCalc[] | undefined;
+}) {
   const W = 1240;
   const drawnStrings = Math.min(m.pv?.strings || 1, 4);
   const pvTop = 52;
@@ -235,6 +244,11 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
   const inv = m.inverter;
   const bat = m.battery;
   const ac = m.acBox;
+  const phase3 = Boolean(inv?.phase3 || ac?.phase3);
+  const drop = (tag: string) => {
+    const c = calcs?.find((x) => x.tag === tag);
+    return c && c.dropPct !== null ? ` — ${c.dropPct}%` : "";
+  };
 
   // نقطة مخرج الألواح / مدخل الإنفرتر بحسب وجود لوحة الـ DC
   const dcOutX = dc ? xDc + wDc : xPv + wPv;
@@ -247,13 +261,14 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
       {...(fit ? { height: "100%", preserveAspectRatio: "xMidYMid meet" } : {})}
       role="img"
       aria-label="Single Line Diagram"
-      style={fit ? { background: C.fill, display: "block" } : { background: C.fill }}
+      style={{ ...THEMES[theme], background: C.fill, ...(fit ? { display: "block" } : {}) } as React.CSSProperties}
     >
       <defs>
         <marker id="sld-arrow" markerWidth={8} markerHeight={8} refX={7} refY={4} orient="auto">
           <path d="M0,0 L8,4 L0,8 z" fill={C.ac} />
         </marker>
       </defs>
+
 
       {/* ── جانب التيار المستمر: سلاسل الألواح ───────────────────────────── */}
       {pv && (
