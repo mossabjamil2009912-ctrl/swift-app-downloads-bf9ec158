@@ -585,9 +585,14 @@ export default function SldDiagram({ params, number, actions }: Props) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [full, setFull] = useState(false);
+  const [theme, setTheme] = useState<SldTheme>("paper");
+  const [picked, setPicked] = useState<string | null>(null);
   const [rot, setRot] = useState<{ on: boolean; w: number; h: number }>({ on: false, w: 0, h: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
+  const calcs: CableCalc[] = useMemo(() => (model ? cableCalcs(model) : []), [model]);
+  const items = useMemo(() => (model ? inspectorItems(model) : {}), [model]);
+
 
   /**
    * في ملء الشاشة على الهواتف الطولية يُدار الرسم العريض 90° ليملأ الشاشة كاملة
