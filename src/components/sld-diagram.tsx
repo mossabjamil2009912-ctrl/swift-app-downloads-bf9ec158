@@ -753,8 +753,9 @@ export default function SldDiagram({ params, number, actions }: Props) {
 
       <div className="mt-3">{canvas}</div>
       <p className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، وزر ملء الشاشة لعرضه بالكامل.
+        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، واضغط أي مكوّن لعرض مواصفاته الفنية.
       </p>
+
 
 
       {/* كتلة بيانات اللوحة الرسمية */}
