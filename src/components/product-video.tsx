@@ -133,10 +133,20 @@ export default function ProductVideoPlayer({
           onEnded={onFinish}
         />
 
+        {/* تحضير الشرح الصوتي: الفيديو ينتظر حتى ينطلقا معاً */}
+        {preparing ? (
+          <div className="pointer-events-none absolute inset-0 grid place-items-center bg-navy/45 backdrop-blur-[2px]">
+            <div className="flex items-center gap-2 rounded-full bg-navy/85 px-4 py-2 text-[11px] font-black text-skyline-foreground shadow-lg">
+              <Loader2 className="size-4 animate-spin" /> جارٍ تحضير الشرح الصوتي…
+            </div>
+          </div>
+        ) : null}
+
         {/* هوية المعرض */}
         <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-navy/70 px-3 py-1 text-[10px] font-black tracking-wide text-skyline-foreground backdrop-blur">
           معرض ACTES
         </div>
+
 
         {/* بطاقة المواصفة المتزامنة مع الكلام */}
         {cue ? (
