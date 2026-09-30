@@ -621,7 +621,12 @@ export function SldSvg({
                     </text>
                   </g>
                 )}
-              </>
+                {flow === "outage" && (
+                  <text x={(from + xOut) / 2 - 56} y={dcY + 16} textAnchor="middle" fontFamily={F} fontSize={7.6} fontWeight={700} fill={C.dc}>
+                    GRID OPEN — ANTI-ISLANDING
+                  </text>
+                )}
+              </g>
             )}
             <Block
               x={xOut}
