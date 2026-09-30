@@ -785,29 +785,41 @@ export default function SldDiagram({ params, number, actions }: Props) {
 
       {model.cables.length > 0 && (
         <>
-          <h4 className="mt-4 text-xs font-black text-skyline">جدول الكابلات المناسبة</h4>
+          <h4 className="mt-4 text-xs font-black text-skyline">جدول الكابلات والحسابات الكهربائية</h4>
           <div className="mt-2 -mx-1 overflow-x-auto px-1" data-quote-scroll dir="ltr">
-            <table className="w-full min-w-[430px] border-collapse text-[10.5px]">
+            <table className="w-full min-w-[620px] border-collapse text-[10.5px]">
               <thead>
                 <tr className="bg-brand text-brand-foreground">
                   <th className="border border-border px-2 py-1.5 font-black">TAG</th>
                   <th className="border border-border px-2 py-1.5 font-black">ROUTE</th>
                   <th className="border border-border px-2 py-1.5 font-black">CABLE</th>
+                  <th className="border border-border px-2 py-1.5 font-black">L (m)</th>
+                  <th className="border border-border px-2 py-1.5 font-black">Vdrop</th>
+                  <th className="border border-border px-2 py-1.5 font-black">Icu</th>
                 </tr>
               </thead>
               <tbody>
-                {model.cables.map((c) => (
+                {calcs.map((c) => (
                   <tr key={c.tag + c.route} className="odd:bg-muted/40">
                     <td className="border border-border px-2 py-1 text-center font-black">{c.tag}</td>
                     <td className="border border-border px-2 py-1">{c.route}</td>
                     <td className="border border-border px-2 py-1">{c.spec}</td>
+                    <td className="border border-border px-2 py-1 text-center">{c.length}</td>
+                    <td className={`border border-border px-2 py-1 text-center font-black ${c.dropPct !== null && c.dropPct > 3 ? "text-brand" : ""}`}>
+                      {c.dropPct !== null ? `${c.dropPct}%` : "—"}
+                    </td>
+                    <td className="border border-border px-2 py-1 text-center">{c.kA ? `${c.kA} kA` : "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p className="mt-1 text-[9.5px] text-muted-foreground" dir="rtl">
+            هبوط الجهد محسوب على أطوال تصميمية نمطية (نحاس 0.0175 Ω·mm²/م) ويُراجع بعد المسح الموقعي؛ الحد المقبول 3%.
+          </p>
         </>
       )}
+
 
       {model.bom.length > 0 && (
         <>
