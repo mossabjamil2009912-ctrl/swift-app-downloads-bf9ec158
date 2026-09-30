@@ -907,6 +907,15 @@ export default function SldDiagram({ params, number, actions }: Props) {
       </button>
       <button
         type="button"
+        onClick={saveImage}
+        disabled={saving}
+        aria-label="حفظ المخطط صورة عالية الدقة"
+        className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand disabled:opacity-50"
+      >
+        <ImageDown className="size-4" />
+      </button>
+      <button
+        type="button"
         onClick={() => { setFull((v) => !v); setPan({ x: 0, y: 0 }); }}
         aria-label={full ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
         className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand"
