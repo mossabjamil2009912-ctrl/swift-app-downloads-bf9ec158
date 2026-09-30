@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ArrowRight, BatteryCharging, Check, ChevronDown, Copy, Download, Eye, FileText, Gauge, Info, Layers, Link2, ListChecks, MessageCircle, Play, Share2, Sparkles, Sun, Users, Wrench, X, Zap } from "lucide-react";
+import { ArrowRight, BatteryCharging, Check, ChevronDown, Container, Copy, Download, Eye, FileText, Gauge, Info, Layers, Link2, ListChecks, MessageCircle, Play, Share2, Sparkles, Sun, Users, Wrench, X, Zap } from "lucide-react";
 import QRCode from "qrcode";
 import { CATEGORIES, findProduct, matchCompatibleProducts, productsByCategory, quickSpecs, type Product, type ProductCategory, type ProductFile } from "@/lib/products-data";
 import { isVoiceOn, isVoicePlatform, prepareSpeech, silenceNextScreen, speakScreen, speakScreenAfterCurrent, stopSpeaking } from "@/lib/voice-guide";
@@ -15,11 +15,13 @@ const CAT_TONE: Record<ProductCategory, string> = {
   panels: "bg-brand text-brand-foreground",
   inverters: "bg-skyline text-skyline-foreground",
   batteries: "bg-energy text-energy-foreground",
+  storage: "bg-navy text-white",
 };
 const CAT_BIG_ICON: Record<ProductCategory, ReactNode> = {
   panels: <Sun className="size-10 lg:size-12" />,
   inverters: <Zap className="size-10 lg:size-12" />,
   batteries: <BatteryCharging className="size-10 lg:size-12" />,
+  storage: <Container className="size-10 lg:size-12" />,
 };
 
 /**
@@ -77,7 +79,7 @@ const PREVIEW_IDS: Partial<Record<ProductCategory, string[]>> = {
 function CategoriesScreen({ onPick, onBack }: { onPick: (c: ProductCategory) => void; onBack: () => void }) {
   useScreenVoice(
     "catalog-home",
-    "قسم منتجات أكتس. اختر الفئة التي تريد استعراضها: الألواح الشمسية، أو الإنفرترات، أو بطاريات الليثيوم.",
+    "قسم منتجات أكتس. اختر الفئة التي تريد استعراضها: الألواح الشمسية، أو الإنفرترات، أو بطاريات الليثيوم، أو أنظمة التخزين.",
   );
   return (
     <div className="screen-enter w-full space-y-5 pb-4">

@@ -22,8 +22,8 @@ const BRAND_EN: Array<[RegExp, string]> = [
   [/hithium|heroee/i, "Hithium"],
 ];
 
-const KIND_AR: Record<string, string> = { panels: "لوح", inverters: "إنفرتر", batteries: "بطارية" };
-const KIND_EN: Record<string, string> = { panels: "Panel", inverters: "Inverter", batteries: "Battery" };
+const KIND_AR: Record<string, string> = { panels: "لوح", inverters: "إنفرتر", batteries: "بطارية", storage: "نظام تخزين" };
+const KIND_EN: Record<string, string> = { panels: "Panel", inverters: "Inverter", batteries: "Battery", storage: "ESS" };
 
 function brandAr(brand: string) {
   return BRAND_AR.find(([re]) => re.test(brand))?.[1] ?? brand;
@@ -35,6 +35,10 @@ function brandEn(brand: string) {
 
 /** القدرة أو السعة بصيغة قصيرة: 720W، 3–6kW، 100Ah. */
 function shortRating(p: TitleProduct) {
+  if (p.category === "storage") {
+    const kwh = p.power.match(/([\d.]+\s*kWh)/i);
+    if (kwh?.[1]) return kwh[1].replace(/\s+/g, "");
+  }
   if (p.category === "batteries") {
     const ah = p.name.match(/([\d.]+\s*Ah)/i);
     if (ah?.[1]) return ah[1].replace(/\s+/g, "");
