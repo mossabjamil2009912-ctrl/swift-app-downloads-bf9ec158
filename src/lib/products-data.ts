@@ -5,6 +5,8 @@ import p3 from "@/assets/products/p3.webp";
 import p4 from "@/assets/products/p4.webp";
 import fidusBatteryPlusImage from "@/assets/products/pylontech-fidus-battery-plus.png";
 import cubeM5aImage from "@/assets/products/pylontech-powercube-m5a.png.asset.json";
+import optimusA300Image from "@/assets/products/pylontech-optimus-a300-hy.png.asset.json";
+import optimusA300Catalog from "@/assets/products/pylontech-optimus-a300-hy.pdf.asset.json";
 import lithium12v314ahImage from "@/assets/products/lithium-12v-314ah.png.asset.json";
 import heroeeNeoPower4G2Catalog from "@/assets/products/hithium-heroee-neopower-4-g2.pdf.asset.json";
 import p7 from "@/assets/products/p7.webp";
@@ -43,7 +45,7 @@ import c19 from "@/assets/products/c19.pdf.asset.json";
 import c20 from "@/assets/products/c20.pdf.asset.json";
 import c21 from "@/assets/products/c21.pdf.asset.json";
 
-export type ProductCategory = "panels" | "inverters" | "batteries";
+export type ProductCategory = "panels" | "inverters" | "batteries" | "storage";
 export type SpecGroup = { title: string; rows: [string, string][] };
 export type ModelTable = { models: string[]; rows: { label: string; values: string[] }[] };
 export type ProductFile = { kind: "Catalog" | "Datasheet" | "User Manual" | "Installation Manual" | "Certificate"; label: string; url: string };
@@ -75,6 +77,7 @@ export const CATEGORIES: { id: ProductCategory; title: string; emoji: string; su
   { id: "panels", title: "الألواح الشمسية", emoji: "☀️", subtitle: "ألواح عالية الكفاءة ثنائية الوجه" },
   { id: "inverters", title: "الإنفرترات", emoji: "⚡", subtitle: "إنفرترات هجينة أحادية وثلاثية الطور" },
   { id: "batteries", title: "البطاريات", emoji: "🔋", subtitle: "بطاريات ليثيوم فوسفات الحديد LiFePO4" },
+  { id: "storage", title: "أنظمة التخزين", emoji: "🏭", subtitle: "خزانات تخزين تجارية وصناعية بإنفرتر هجين مدمج" },
 ];
 
 const sheet = (url: string): ProductFile[] => [{ kind: "Datasheet", label: "الكتالوج / Datasheet الرسمي", url }];
@@ -871,6 +874,45 @@ export const PRODUCTS: Product[] = [
     certificates: "CE، CB، UN38.3، IEC 62619",
     image: p4,
     files: sheet(c4.url),
+  },
+
+  // ───────────── أنظمة التخزين ─────────────
+  {
+    id: "pylontech-optimus-a300-hy",
+    category: "storage",
+    brand: "Pylontech",
+    name: "نظام تخزين Pylontech OPTIMUS A300-HY الهجين المتكامل",
+    model: "A300-HY (M5-300kWh-1000V)",
+    power: "313 kWh / 100 kW",
+    description: "خزانة تخزين طاقة تجارية وصناعية بإنفرتر هجين مدمج، سعة 313kWh وقدرة 50/100kW، قابلة للتوسعة حتى 1565kWh.",
+    about:
+      "OPTIMUS A300-HY نظام تخزين طاقة متكامل داخل خزانة خارجية واحدة من Pylontech، يجمع بطاريات ليثيوم فوسفات الحديد (LFP) بسعة اسمية 313 kWh مع إنفرتر هجين مدمج بقدرة 50 أو 100 kW وخرج ثلاثي الطور 400 فولت. يحتوي على نظام تبريد هوائي ونظام إطفاء حريق (Aerosol) وحماية IP55، ويعمل بمعدل 0.5C بعمق تفريغ 98% وعمر يفوق 7000 دورة وكفاءة ذهاب وعودة 96%. يمكن ربط حتى 5 وحدات على التوازي لتصل السعة إلى 1565 kWh والقدرة إلى 500 kW.",
+    features: [
+      "إنفرتر هجين مدمج داخل الخزانة بقدرة 50 / 100 kW ثلاثي الطور 400Vac",
+      "سعة اسمية 313 kWh وتوسعة من 156.8 حتى 1565 kWh",
+      "عمر تشغيلي يفوق 7000 دورة وعمق تفريغ 98% للسلسلة الواحدة",
+      "زمن تحويل من الشبكة إلى العزل أقل من 10 مللي ثانية",
+      "نظام إطفاء حريق Aerosol مدمج وحماية IP55 ومقاومة تآكل C3",
+      "أنماط تشغيل: تقليم الذروة، إزاحة الطاقة، الاستهلاك الذاتي، التغذية الاحتياطية",
+    ],
+    uses: [
+      "المصانع والمنشآت الصناعية",
+      "المراكز التجارية والفنادق والمستشفيات",
+      "محطات الشحن ومشاريع تقليم الذروة",
+      "المزارع ومشاريع الطاقة الشمسية الكبيرة",
+    ],
+    suitableFor: "للمشاريع التجارية والصناعية التي تحتاج تخزيناً كبيراً جاهزاً بالإنفرتر داخل خزانة خارجية واحدة سهلة التركيب والتوسعة.",
+    specs: [
+      { title: "بيانات عامة", rows: [["الأبعاد (عرض × عمق × ارتفاع، بدون الإنفرتر)", "1500 × 1300 × 2200 mm"], ["الوزن", "3.5 طن"], ["حرارة التشغيل", "−20~55 °C"], ["درجة الحماية", "IP55"], ["الارتفاع عن سطح البحر", "≤3000 m"], ["الرطوبة", "0~95%"], ["نظام الإطفاء", "Aerosol"], ["نظام التبريد", "تبريد هوائي (Air Cooling)"], ["استهلاك نظام التبريد (تبريد/تدفئة)", "5 / 6.4 kW"], ["الاستهلاك المساعد (مستمر/ذروة)", "2.35 / 4 / 26 kW"], ["أقصى عدد وحدات على التوازي", "5"], ["مقاومة التآكل", "C3"]] },
+      { title: "بيانات البطارية", rows: [["نوع البطارية", "Li-ion (LFP)"], ["السعة الاسمية", "313 kWh"], ["معدل التشغيل المستمر", "0.5C"], ["أقصى تيار تشغيل", "180 A × 2"], ["عمق التفريغ", "98% (سلسلة واحدة)"], ["عمر الدورات", "أكثر من 7000 دورة"], ["نطاق جهد التيار المستمر", "560~720 Vdc (سلسلة واحدة)"], ["التيار الاسمي للتشغيل", "122.5 A × 2"], ["كفاءة الذهاب والعودة @0.5C", "96%"]] },
+      { title: "بيانات الإنفرتر الهجين (على الشبكة)", rows: [["القدرة المقننة AC", "50 / 100 kW"], ["جهد الخرج المقنن", "400 Vac"], ["ترددات الخرج", "50 / 60 Hz"], ["أقصى تيار AC", "76 A (حمل خطي)"], ["قدرة التحميل الزائد", "110%"], ["معامل القدرة", "أكبر من 0.99 (0.8 متقدم ~ 0.8 متأخر)"], ["كفاءة CEC", "97.4% (أقصى 97.8%)"], ["نوع العزل", "بدون محول عزل"], ["زمن الاستجابة (شبكة ← عزل)", "أقل من 10 ms"]] },
+      { title: "التشغيل والاتصالات", rows: [["منافذ الاتصال", "RS485 (MODBUS RTU) / LAN (MODBUS TCP/IP) / CAN"], ["منطق التشغيل", "تقليم الذروة / إزاحة الطاقة / الاستهلاك الذاتي / التغذية الاحتياطية"]] },
+      { title: "تكوين النظام والتوسعة", rows: [["عدد الإنفرترات", "1 إلى 10"], ["نطاق القدرة", "50 ~ 500 kW"], ["نطاق السعة", "156.8 ~ 1565 kWh"], ["سعات الخزانة الواحدة", "219 / 250 / 313 kWh"], ["عدد الخزانات", "1 إلى 5"], ["الحد الأدنى للتكوين", "50 kW"]] },
+    ],
+    certificates:
+      "UN38.3، UN 3480، IEC62619، IEC62040-1، CE، UKCA (EMC/RED)، VDE2510-50، UL1973، UL9540A، G99، VDE-AR-N 4105، EN 50549-1، EN 50549-10، EIFS 2018.2، IEC 62116، IEC 61727، IEC 60068، IEC 61683، EN 50530",
+    image: optimusA300Image.url,
+    files: [{ kind: "Datasheet", label: "الكتالوج / Datasheet الرسمي", url: optimusA300Catalog.url }],
   },
 ];
 

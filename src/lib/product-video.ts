@@ -45,6 +45,8 @@ import cubeM5aVideo from "@/assets/showroom/pylontech-powercube-m5a.mp4.asset.js
 import cubeM5aPoster from "@/assets/showroom/pylontech-powercube-m5a.jpg";
 import cubeM1cVideo from "@/assets/showroom/pylontech-powercube-m1c.mp4.asset.json";
 import cubeM1cPoster from "@/assets/showroom/pylontech-powercube-m1c.jpg";
+import optimusA300Video from "@/assets/showroom/pylontech-optimus-a300-hy.mp4.asset.json";
+import optimusA300Poster from "@/assets/showroom/pylontech-optimus-a300-hy.jpg";
 
 /** بطاقة مواصفة تظهر على الفيديو من الثانية `at` حتى `until`. */
 export type VideoCue = { at: number; until: number; label: string; value: string };
@@ -246,6 +248,16 @@ export const PRODUCT_VIDEOS: Record<string, ProductVideo> = {
       { at: 7.4, until: 10, label: "دورة الحياة", value: "8000 (25 °C)" },
     ],
   },
+  "pylontech-optimus-a300-hy": {
+    src: optimusA300Video.url,
+    poster: optimusA300Poster,
+    cues: [
+      { at: 0.4, until: 2.4, label: "السعة الاسمية", value: "313 kWh" },
+      { at: 2.4, until: 4.0, label: "الإنفرتر الهجين المدمج", value: "50 / 100 kW" },
+      { at: 4.0, until: 5.2, label: "عمر الدورات", value: "أكثر من 7000 دورة" },
+      { at: 5.2, until: 7.0, label: "الأبعاد الحقيقية", value: "1500 × 1300 × 2200 mm — 3.5 طن" },
+    ],
+  },
   "pylontech-powercube-m5a": {
     src: cubeM5aVideo.url,
     poster: cubeM5aPoster,
@@ -346,6 +358,7 @@ const SPOKEN_MODELS: Array<{ match: RegExp; spoken: string | null }> = [
   { match: /^PowerCube-M5A/i, spoken: "سلسلة باور كيوب إم 5 إيه" },
   { match: /^PowerCube-M1C/i, spoken: "سلسلة باور كيوب إم 1 سي" },
   { match: /^HeroEE MaxPower/i, spoken: null },
+  { match: /^A300-HY/i, spoken: "أوبتيموس إيه 300 هايبرد" },
 ];
 
 /** الموديل بصيغة منطوقة سلسة، أو null إذا كان من الأفضل عدم نطقه. */
@@ -363,6 +376,7 @@ const KIND_WORD: Record<string, string> = {
   panels: "لوح شمسي",
   inverters: "إنفرتر",
   batteries: "بطارية ليثيوم",
+  storage: "نظام تخزين طاقة",
 };
 
 /** هل تدل المواصفة على القدرة/السعة؟ نحذفها من النطق لأنها ذُكرت مرة واحدة في المقدمة. */
@@ -383,7 +397,7 @@ export function videoIntroNarration(
   const brand = spokenName(p.brand);
   const model = spokenModel(p.model);
   const power = spokenValue(p.power);
-  const powerWord = p.category === "batteries" ? "بسعة" : "بقدرة";
+  const powerWord = p.category === "batteries" || p.category === "storage" ? "بسعة" : "بقدرة";
   const head = `${kind} ${brand}${model ? ` ${model}` : ""}، ${powerWord} ${power}`;
   const specs = video.cues
     .filter((c) => !isPowerCue(c.label))
