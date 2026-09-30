@@ -3994,13 +3994,13 @@ export function runStateMachine(__session, __parsed, __itemPrices) {
     // زر التواصل مع المبيعات متاح مباشرة من شاشة عرض السعر الرسمي
     if (text === 'sales_contact') { salesHandoff('التواصل مع المبيعات'); step = 'done'; response = salesLinkMsg(); }
     else if (step !== 'res_quote_ask' && (text === 'aq_plan' || /PVsyst\s*ومخطط|الدراسة والمخطط/i.test(String(text)))) { step = 'plan_pick'; response = planPickMsg(); }
-    else if (step !== 'res_quote_ask' && (text === 'aq_study' || text === 'study_yes' || /pvsyst|دراسة|دراسه/i.test(String(text)))) {
+    else if (menu_choice !== '1' && (text === 'aq_study' || text === 'study_yes' || /pvsyst|دراسة|دراسه/i.test(String(text)))) {
       // لا شاشة تأكيد وسيطة: اعرض الدراسة مباشرة عند توفر الموقع.
       if (cityKnown()) { send_study_file = true; step = 'sld_ask'; response = ''; followup_kind = ''; }
       else { city = ''; step = 'study_city_gov'; response = studySiteAsk(); }
     }
     // لا شاشة تأكيد وسيطة: اعرض المخطط الكهربائي مباشرة (التجاري/الصناعي/الزراعي فقط).
-    else if (step !== 'res_quote_ask' && (text === 'aq_sld' || text === 'sld_yes' || /مخطط|sld/i.test(String(text)))) { make_sld = true; step = 'buy_ask'; response = ''; followup_kind = ''; }
+    else if (menu_choice !== '1' && (text === 'aq_sld' || text === 'sld_yes' || /مخطط|sld/i.test(String(text)))) { make_sld = true; step = 'buy_ask'; response = ''; followup_kind = ''; }
     else if (text === 'aq_buy' || text === 'buy_invoice' || /شراء|متابعة/.test(String(text))) { response = goBuy(); }
     else if (text === '1') { wants_quote = 'yes'; step = 'quote_name'; response = askNameMsg(); }
     else if (text === '2') { wants_quote = 'no'; step = 'done'; response = m('no_quote'); }
@@ -4217,8 +4217,8 @@ export function runStateMachine(__session, __parsed, __itemPrices) {
   } else if (step === 'done') { response = noOpt(m('back'));
   } else if (step === 'buy_ask') {
     if (text === 'sales_contact') { salesHandoff('التواصل مع المبيعات'); step = 'done'; response = salesLinkMsg(); }
-    else if (text === 'aq_sld' || text === 'sld_yes' || /مخطط|sld/i.test(String(text))) { make_sld = true; step = 'buy_ask'; response = ''; followup_kind = ''; }
-    else if (text === 'aq_study' || text === 'study_yes' || /pvsyst|دراسة|دراسه/i.test(String(text))) {
+    else if (menu_choice !== '1' && (text === 'aq_sld' || text === 'sld_yes' || /مخطط|sld/i.test(String(text)))) { make_sld = true; step = 'buy_ask'; response = ''; followup_kind = ''; }
+    else if (menu_choice !== '1' && (text === 'aq_study' || text === 'study_yes' || /pvsyst|دراسة|دراسه/i.test(String(text)))) {
       if (cityKnown()) { send_study_file = true; step = 'sld_ask'; response = ''; followup_kind = ''; }
       else { city = ''; step = 'study_city_gov'; response = studySiteAsk(); }
     }
