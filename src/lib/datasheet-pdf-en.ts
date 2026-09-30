@@ -18,7 +18,8 @@ const abs = (u: string) => {
   return typeof window === "undefined" ? u : new URL(u, window.location.origin).href;
 };
 
-const modelCode = (product: Product) => product.model.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+const modelCode = (product: Product) =>
+  translateSpecValue(product.model.replace(/\s*\([^)]*\)\s*/g, " ").trim());
 
 const categoryLabelEn = (product: Product) =>
   product.category === "panels" ? "Solar Panels" : product.category === "batteries" ? "Batteries" : "Inverters";
