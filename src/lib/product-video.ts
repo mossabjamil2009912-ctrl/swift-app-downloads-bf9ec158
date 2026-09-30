@@ -365,9 +365,15 @@ const KIND_WORD: Record<string, string> = {
   batteries: "بطارية ليثيوم",
 };
 
+/** هل تدل المواصفة على القدرة/السعة؟ نحذفها من النطق لأنها ذُكرت مرة واحدة في المقدمة. */
+function isPowerCue(label: string) {
+  return /قدرة|سعة|الطاقة|Pmax/i.test(label);
+}
+
 /**
- * التعليق الصوتي المصاحب للفيديو: نوع المنتج والعلامة، ثم الموديل، ثم القدرة/السعة،
- * ثم المواصفات الرئيسية كما تظهر على الشاشة. المميزات والاستخدامات تُشرح بعد الفيديو.
+ * التعليق المصاحب للفيديو — مختصر جداً: جملة واحدة تجمع النوع والعلامة والموديل
+ * والقدرة (مرة واحدة فقط)، ثم أهم مواصفتين فقط كما تظهر على الشاشة.
+ * الفائدة العملية ولمن يناسب المنتج تُنطق بعد نهاية الفيديو.
  */
 export function videoIntroNarration(
   p: { brand: string; model: string; power: string; category: string },
@@ -378,12 +384,34 @@ export function videoIntroNarration(
   const model = spokenModel(p.model);
   const power = spokenValue(p.power);
   const powerWord = p.category === "batteries" ? "بسعة" : "بقدرة";
-  const head = `${kind} من ${brand}${model ? `، ${model}` : ""}، ${powerWord} ${power}.`;
+  const head = `${kind} ${brand}${model ? ` ${model}` : ""}، ${powerWord} ${power}`;
   const specs = video.cues
+    .filter((c) => !isPowerCue(c.label))
+    .slice(0, 2)
     .map((c) => `${c.label.replace(/\bPmax\b/gi, "").trim()} ${spokenValue(c.value)}`)
     .join("، ");
-  return `${head} ${specs}.`;
+  return specs ? `${head}، ${specs}.` : `${head}.`;
 }
+
+/**
+ * التعليق بعد نهاية الفيديو — مكمّل لا مكرِّر: جملة أو جملتان عن الفائدة العملية
+ * وأين يُركّب ولمن يناسب، بلا أي رقم أو قدرة سبق ذكرها في الفيديو.
+ */
+export function afterVideoNarration(p: {
+  uses?: string[];
+  suitableFor?: string;
+  features?: string[];
+}) {
+  const clean = (s: string) =>
+    s.replace(/[\d٠-٩]+[^،.]*/g, "").replace(/\s{2,}/g, " ").replace(/^[،\s]+|[،\s]+$/g, "").trim();
+  const uses = (p.uses ?? []).map(clean).filter((u) => u.length > 2).slice(0, 3).join("، ");
+  const suitable = clean(p.suitableFor ?? "");
+  const feature = (p.features ?? []).map(clean).find((f) => f.length > 6) ?? "";
+  const first = uses ? `حل مناسب لـ ${uses}.` : suitable ? `${suitable}.` : "";
+  const second = feature ? `${feature}.` : uses && suitable ? `${suitable}.` : "";
+  return [first, second].filter(Boolean).join(" ").replace(/\.\./g, ".");
+}
+
 
 /** نص التعليق الصوتي العربي لفيديو المنتج: الاسم ثم أهم المواصفات كما في الكتالوج. */
 export function videoNarration(title: string, video: ProductVideo) {
