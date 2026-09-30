@@ -4,7 +4,7 @@ import actesLogo from "@/assets/actes-logo-full.webp";
 import actesLogoWhite from "@/assets/actes-logo-white.webp";
 import { useLang, type Lang } from "@/lib/i18n";
 import { SoundToggle } from "@/lib/click-sound";
-import { prepareSpeech, prepareWelcome, quoteSpeech, replaySpeech, respeakScreen, setScreenSpeechSilently, silenceNextScreen, speakScreen, speakWelcome, studySpeech, stopSpeaking, unlockVoice, viewSpeech } from "@/lib/voice-guide";
+import { prepareSpeech, prepareWelcome, quoteSpeech, replaySpeech, respeakScreen, setScreenSpeech, setScreenSpeechSilently, silenceNextScreen, speakScreen, speakWelcome, studySpeech, stopSpeaking, unlockVoice, viewSpeech } from "@/lib/voice-guide";
 import { startVoiceWarmup } from "@/lib/voice-warmup";
 import { preloadAppImages } from "@/lib/preload-images";
 import PvsystStudy from "@/components/pvsyst-study";
@@ -1302,6 +1302,10 @@ function AppFooter() {
 }
 
 function HomeDashboard({ onService, onProducts }: { onService: (kind: "quote" | "energy" | "support") => void; onProducts: () => void }) {
+  // نسجّل نص الشاشة الرئيسية حتى يعيده زر «إعادة السماع» عند الرجوع إليها، بلا نطق تلقائي.
+  useEffect(() => {
+    setScreenSpeech("الشاشة الرئيسية لأكتس. يمكنك طلب عرض سعر، أو استكشاف حلول أنظمة الطاقة، أو التواصل مع الدعم الفني، أو التعرف على منتجاتنا.");
+  }, []);
   return (
     <div className="screen-enter flex min-h-0 w-full flex-col gap-2 lg:h-full">
       <CorporateHero />
