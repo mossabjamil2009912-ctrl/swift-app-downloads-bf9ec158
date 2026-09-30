@@ -641,14 +641,14 @@ export function SldSvg({
               active={active === (backup ? "backup" : "loads")}
             />
             {backup ? (
-              <>
-                <line x1={xInv + wInv} y1={dcY + 30} x2={xInv + wInv + 18} y2={dcY + 30} stroke={C.ac} strokeWidth={2} />
-                <line x1={xInv + wInv + 18} y1={dcY + 30} x2={xInv + wInv + 18} y2={loadY} stroke={C.ac} strokeWidth={2} />
-                <line x1={xInv + wInv + 18} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={2} markerEnd="url(#sld-arrow)" />
+              <g opacity={opEps}>
+                <line x1={xInv + wInv} y1={dcY + 30} x2={xInv + wInv + 18} y2={dcY + 30} stroke={C.ac} strokeWidth={wEps} />
+                <line x1={xInv + wInv + 18} y1={dcY + 30} x2={xInv + wInv + 18} y2={loadY} stroke={C.ac} strokeWidth={wEps} />
+                <line x1={xInv + wInv + 18} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={wEps} markerEnd="url(#sld-arrow)" />
                 <Node x={xInv + wInv} y={dcY + 30} color={C.ac} />
                 <PhaseMark x={(xInv + wInv + xOut) / 2 + 40} y={loadY} phase3={phase3} />
                 <WireTag x={(xInv + wInv + xOut) / 2 - 40} y={loadY - 6} text={`W6 — EPS BACKUP${drop("W6")}`} color={C.ac} />
-              </>
+              </g>
             ) : (
               <>
                 <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
