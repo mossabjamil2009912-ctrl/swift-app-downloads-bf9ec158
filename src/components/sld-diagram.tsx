@@ -473,7 +473,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
   const canvas = (
     <div
       ref={boxRef}
-      className={`overflow-hidden rounded-md border border-border bg-white touch-none ${full ? "h-[calc(100vh-6.5rem)]" : "h-[62vh] min-h-[320px]"}`}
+      className={`relative overflow-hidden rounded-md border border-border bg-white touch-none ${full ? "h-[calc(100vh-6.5rem)]" : "h-[62vh] min-h-[320px]"}`}
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
