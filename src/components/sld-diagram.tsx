@@ -377,6 +377,12 @@ export function SldSvg({
           </text>
           <text x={xInv - 6} y={dcY + 12} textAnchor="end" fontFamily={F} fontSize={7.6} fill={C.dc}>DC IN</text>
           <text x={xInv + wInv + 6} y={dcY + 12} fontFamily={F} fontSize={7.6} fill={C.ac}>AC OUT</text>
+          {pv?.strVoc && inv.mpptRange && (
+            <text x={xInv + wInv / 2} y={invY - 8} textAnchor="middle" fontFamily={F} fontSize={7.6} fill={C.soft}>
+              {`STRING CHECK: Voc ${Math.round(pv.strVoc)} V within ${inv.mpptRange}`}
+            </text>
+          )}
+
         </>
       )}
 
