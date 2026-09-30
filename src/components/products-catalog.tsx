@@ -339,21 +339,13 @@ function ProductDetail({ product, onOpen, onBack, backLabel }: { product: Produc
   const [reelDone, setReelDone] = useState(!video);
   useEffect(() => { setReelDone(!getProductVideo(videoKey)); }, [videoKey]);
 
-  // بعد الفيديو: لا نكرّر الاسم والموديل والقدرة والمواصفات (شرحها الفيديو)،
-  // بل نكمل بقية صفحة الوصف: نبذة المنتج، المميزات، الاستخدامات، ولمن يناسب.
+  // بعد الفيديو: جملة أو جملتان عن الفائدة العملية ولمن يناسب المنتج،
+  // بلا تكرار الاسم أو الموديل أو القدرة أو المواصفات التي نطقها الفيديو.
   const afterVideoText = useMemo(() => {
-    if (video) {
-      const feats = product.features.slice(0, 4).join("، ");
-      const uses = product.uses.slice(0, 4).join("، ");
-      return [
-        product.about,
-        feats ? `أبرز المميزات: ${feats}.` : "",
-        uses ? `الاستخدامات: ${uses}.` : "",
-        product.suitableFor,
-      ].filter(Boolean).join(" ");
-    }
+    if (video) return afterVideoNarration(product);
     return `${product.name} من ${product.brand}. الموديل ${product.model}. ${product.description}`;
   }, [product, video]);
+
   useScreenVoice(`catalog-product-${product.id}`, reelDone ? afterVideoText : "", !!video);
   const [viewFile, setViewFile] = useState<ProductFile | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
