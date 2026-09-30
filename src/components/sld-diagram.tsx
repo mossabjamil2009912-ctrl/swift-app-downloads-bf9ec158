@@ -392,7 +392,7 @@ export function SldSvg({
             w={wDc}
             h={Math.max(pvH + 8, 74)}
             title="DC PROTECTION BOARD"
-            lines={[`${dc.ways} Way`, `Fuse gPV ${dc.fuseA} A / 1000 V DC`, "DC Isolator", "Icu 10 kA", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
+            lines={[`${dc.ways} Way — IP65 UV`, `Fuse gPV ${dc.fuseA} A / 1000 V DC`, "DC Isolator (load break)", "Icu 10 kA", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
             accent={C.dc}
             id="dc"
             pick={pick}
