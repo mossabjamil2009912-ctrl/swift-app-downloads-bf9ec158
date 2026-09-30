@@ -426,7 +426,8 @@ function ActesApp() {
         setDraft("");
         chosenRef.current = "";
         const isResidential = String(sessionRef.current["menu_choice"] ?? "") === "1";
-        void respeakScreen(previous.view
+        // الرجوع صامت: نسجّل نص الشاشة فقط، وزر إعادة السماع في رأس الشاشة ينطقه عند الطلب.
+        setScreenSpeechSilently(`back|${previous.step}`, previous.view
           ? (previous.view.study?.fresh
             ? studySpeech(previous.view.study)
             : previous.view.quote
