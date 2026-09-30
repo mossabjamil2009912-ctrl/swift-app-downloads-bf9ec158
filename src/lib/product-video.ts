@@ -253,7 +253,7 @@ export const PRODUCT_VIDEOS: Record<string, ProductVideo> = {
     poster: optimusA300Poster,
     cues: [
       { at: 0.4, until: 2.4, label: "السعة الاسمية", value: "313 kWh" },
-      { at: 2.4, until: 4.0, label: "الإنفرتر الهجين المدمج", value: "50 / 100 kW" },
+      { at: 2.4, until: 4.0, label: "الإنفرتر الهجين المدمج", value: "50 kW" },
       { at: 4.0, until: 5.2, label: "عمر الدورات", value: "أكثر من 7000 دورة" },
       { at: 5.2, until: 7.0, label: "الأبعاد الحقيقية", value: "1500 × 1300 × 2200 mm — 3.5 طن" },
     ],
