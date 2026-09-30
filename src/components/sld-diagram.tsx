@@ -1,30 +1,92 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Download, Expand, LineChart, Minus, Move, Network, Plus, RotateCcw, Shrink, ShoppingCart } from "lucide-react";
+import { ArrowRight, Download, Expand, LineChart, Minus, Move, Network, Palette, Plus, RotateCcw, Shrink, ShoppingCart, X } from "lucide-react";
 import { buildSld, type SldModel } from "@/lib/sld-engine";
+import { cableCalcs, inspectorItems, type CableCalc } from "@/lib/sld-annotations";
 import { downloadSldSheet } from "@/lib/sld-pdf";
 import logoAsset from "@/assets/actes-logo-sld.png.asset.json";
+
 
 /**
  * ألوان الرسم الكهربائي القياسية (IEC): ليست ألوان واجهة بل دلالات هندسية
  * ثابتة على الورق وعلى الشاشة (DC / AC / Earth / Comm).
  */
 const C = {
-  dc: "#b4231f",
-  dcN: "#1b1b1b",
-  ac: "#0f3f9e",
-  earth: "#1a8a2a",
-  ink: "#111111",
-  frame: "#111111",
-  soft: "#6b7280",
-  fill: "#ffffff",
-  band: "#eef2f7",
-  brand: "#e2231a",
+  dc: "var(--sld-dc)",
+  dcN: "var(--sld-dcn)",
+  ac: "var(--sld-ac)",
+  earth: "var(--sld-earth)",
+  ink: "var(--sld-ink)",
+  frame: "var(--sld-frame)",
+  soft: "var(--sld-soft)",
+  fill: "var(--sld-fill)",
+  band: "var(--sld-band)",
+  brand: "var(--sld-brand)",
 };
+
+/** لوحان لونيان: الورقي القياسي للطباعة، والهندسي الأزرق للشاشة. */
+const THEMES = {
+  paper: {
+    "--sld-dc": "#b4231f",
+    "--sld-dcn": "#1b1b1b",
+    "--sld-ac": "#0f3f9e",
+    "--sld-earth": "#1a8a2a",
+    "--sld-ink": "#111111",
+    "--sld-frame": "#111111",
+    "--sld-soft": "#6b7280",
+    "--sld-fill": "#ffffff",
+    "--sld-band": "#eef2f7",
+    "--sld-brand": "#e2231a",
+  },
+  blueprint: {
+    "--sld-dc": "#ff9a93",
+    "--sld-dcn": "#dbe7ff",
+    "--sld-ac": "#8ec0ff",
+    "--sld-earth": "#7ce58e",
+    "--sld-ink": "#eaf2ff",
+    "--sld-frame": "#9fc4ff",
+    "--sld-soft": "#a7bfdd",
+    "--sld-fill": "#0b2545",
+    "--sld-band": "#14355f",
+    "--sld-brand": "#ff8078",
+  },
+} as const;
+
+export type SldTheme = keyof typeof THEMES;
 
 const F = "'Segoe UI', 'Tahoma', sans-serif";
 
 type SldActions = { onBackToQuote: () => void; onBuy: () => void; onStudy?: (() => void) | undefined };
 type Props = { params: Record<string, unknown> | null; number?: string | undefined; actions?: SldActions | undefined };
+
+/** نقطة توصيل عقدية ممتلئة كما في مخططات CAD. */
+function Node({ x, y, color }: { x: number; y: number; color: string }) {
+  return <circle cx={x} cy={y} r={3} fill={color} />;
+}
+
+/** علامة قطبية التيار المستمر (+ / −). */
+function Polarity({ x, y, sign }: { x: number; y: number; sign: "+" | "−" }) {
+  return (
+    <text x={x} y={y} textAnchor="middle" fontFamily={F} fontSize={11} fontWeight={700} fill={sign === "+" ? C.dc : C.dcN}>
+      {sign}
+    </text>
+  );
+}
+
+/** علامة عدد موصلات التيار المتردد على الخط (IEC). */
+function PhaseMark({ x, y, phase3 }: { x: number; y: number; phase3: boolean }) {
+  const n = phase3 ? 4 : 2;
+  return (
+    <g>
+      {Array.from({ length: n }).map((_, i) => (
+        <line key={i} x1={x + i * 4 - 6} y1={y + 5} x2={x + i * 4 - 1} y2={y - 5} stroke={C.ac} strokeWidth={1.2} />
+      ))}
+      <text x={x + 2} y={y - 9} textAnchor="middle" fontFamily={F} fontSize={7} fill={C.ac}>
+        {phase3 ? "L1 L2 L3 N" : "L N"}
+      </text>
+    </g>
+  );
+}
+
 
 
 /** رمز لوح شمسي قياسي. */
@@ -97,13 +159,20 @@ function EarthSymbol({ x, y }: { x: number; y: number }) {
   );
 }
 
-/** صندوق مكوّن هندسي بعنوان وأسطر مواصفات. */
+/** صندوق مكوّن هندسي بعنوان وأسطر مواصفات، قابل للنقر لإظهار بطاقة فحصه. */
 function Block({
-  x, y, w, h, title, lines, accent,
-}: { x: number; y: number; w: number; h: number; title: string; lines: string[]; accent: string }) {
+  x, y, w, h, title, lines, accent, id, pick, active,
+}: {
+  x: number; y: number; w: number; h: number; title: string; lines: string[]; accent: string;
+  id?: string | undefined; pick?: ((id: string) => void) | undefined; active?: boolean | undefined;
+}) {
+  const clickable = Boolean(id && pick);
   return (
-    <g>
-      <rect x={x} y={y} width={w} height={h} fill={C.fill} stroke={C.frame} strokeWidth={1.6} />
+    <g
+      style={clickable ? { cursor: "pointer" } : undefined}
+      onClick={clickable ? () => pick!(id!) : undefined}
+    >
+      <rect x={x} y={y} width={w} height={h} fill={C.fill} stroke={active ? accent : C.frame} strokeWidth={active ? 2.8 : 1.6} />
       <rect x={x} y={y} width={w} height={16} fill={C.band} stroke={C.frame} strokeWidth={1.2} />
       <rect x={x} y={y} width={3} height={h} fill={accent} />
       <text x={x + w / 2} y={y + 12} textAnchor="middle" fontFamily={F} fontSize={9.5} fontWeight={700} fill={C.ink}>
@@ -114,9 +183,16 @@ function Block({
           {l}
         </text>
       ))}
+      {clickable && (
+        <text x={x + w - 6} y={y + h - 6} textAnchor="end" fontFamily={F} fontSize={7} fill={C.soft}>
+          ⓘ
+        </text>
+      )}
     </g>
   );
 }
+
+
 
 /** نص تسمية كابل على المسار. */
 function WireTag({ x, y, text: label, color }: { x: number; y: number; text: string; color: string }) {
@@ -128,7 +204,16 @@ function WireTag({ x, y, text: label, color }: { x: number; y: number; text: str
 }
 
 /** يرسم المخطط الأحادي الكامل داخل عنصر SVG واحد. */
-export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
+export function SldSvg({
+  m, fit = false, theme = "paper", pick, active, calcs,
+}: {
+  m: SldModel;
+  fit?: boolean;
+  theme?: SldTheme;
+  pick?: ((id: string) => void) | undefined;
+  active?: string | null | undefined;
+  calcs?: CableCalc[] | undefined;
+}) {
   const W = 1240;
   const drawnStrings = Math.min(m.pv?.strings || 1, 4);
   const pvTop = 52;
@@ -161,6 +246,11 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
   const inv = m.inverter;
   const bat = m.battery;
   const ac = m.acBox;
+  const phase3 = Boolean(inv?.phase3 || ac?.phase3);
+  const drop = (tag: string) => {
+    const c = calcs?.find((x) => x.tag === tag);
+    return c && c.dropPct !== null ? ` — ${c.dropPct}%` : "";
+  };
 
   // نقطة مخرج الألواح / مدخل الإنفرتر بحسب وجود لوحة الـ DC
   const dcOutX = dc ? xDc + wDc : xPv + wPv;
@@ -173,7 +263,7 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
       {...(fit ? { height: "100%", preserveAspectRatio: "xMidYMid meet" } : {})}
       role="img"
       aria-label="Single Line Diagram"
-      style={fit ? { background: C.fill, display: "block" } : { background: C.fill }}
+      style={{ ...THEMES[theme], background: C.fill, ...(fit ? { display: "block" } : {}) } as React.CSSProperties}
     >
       <defs>
         <marker id="sld-arrow" markerWidth={8} markerHeight={8} refX={7} refY={4} orient="auto">
@@ -181,12 +271,19 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
         </marker>
       </defs>
 
+
       {/* ── جانب التيار المستمر: سلاسل الألواح ───────────────────────────── */}
       {pv && (
-        <>
+        <g
+          style={pick ? { cursor: "pointer" } : undefined}
+          onClick={pick ? () => pick("pv") : undefined}
+        >
           <text x={xPv} y={pvTop - 14} fontFamily={F} fontSize={10} fontWeight={700} fill={C.dc}>
             DC SIDE — PV ARRAY {pv.kwp ? `${pv.kwp.toFixed(2)} kWp` : ""}
           </text>
+          {active === "pv" && (
+            <rect x={xPv - 8} y={pvTop - 8} width={wPv + 14} height={pvH + 40} fill="none" stroke={C.dc} strokeWidth={2.4} strokeDasharray="6 4" />
+          )}
           {Array.from({ length: drawnStrings }).map((_, i) => {
             const y = pvTop + i * rowH + 8;
             return (
@@ -198,6 +295,9 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
                   {`String ${i + 1} — ${pv.perString} × ${pv.wp} Wp`}
                 </text>
                 <line x1={xPv + 90} y1={y + 11} x2={dc ? xDc : xInv} y2={y + 11} stroke={C.dc} strokeWidth={1.5} />
+                <Polarity x={xPv + 100} y={y + 8} sign="+" />
+                <Polarity x={xPv + 114} y={y + 8} sign="−" />
+                <Node x={dc ? xDc : xInv} y={y + 11} color={C.dc} />
                 {pv.strings > drawnStrings && i === drawnStrings - 1 && (
                   <text x={xPv} y={y + 34} fontFamily={F} fontSize={8.4} fontStyle="italic" fill={C.soft}>
                     {`typical — total ${pv.strings} strings × ${pv.perString} modules (${pv.qty} modules)`}
@@ -209,8 +309,9 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
           <text x={xPv} y={pvTop + pvH + 24} fontFamily={F} fontSize={8.4} fill={C.soft}>
             {`${pv.model}${pv.strVoc ? ` — Voc/string ${Math.round(pv.strVoc)} V` : ""}${pv.strVmp ? ` / Vmp ${Math.round(pv.strVmp)} V` : ""}`}
           </text>
-        </>
+        </g>
       )}
+
 
       {/* ── لوحة حماية الـ DC (فقط إذا كانت ضمن الأصناف) ──────────────────── */}
       {dc && (
@@ -221,18 +322,36 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
             w={wDc}
             h={Math.max(pvH + 8, 74)}
             title="DC PROTECTION BOARD"
-            lines={[`${dc.ways} Way`, `Fuse ${dc.fuseA} A / 1000 V DC`, "DC Isolator", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
+            lines={[`${dc.ways} Way`, `Fuse gPV ${dc.fuseA} A / 1000 V DC`, "DC Isolator", "Icu 10 kA", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
             accent={C.dc}
+            id="dc"
+            pick={pick}
+            active={active === "dc"}
           />
           {Array.from({ length: drawnStrings }).map((_, i) => (
             <FuseSymbol key={i} x={xDc + wDc - 20} y={pvTop + i * rowH + 19} />
           ))}
           <SpdSymbol x={xDc + 22} y={pvTop + Math.max(pvH + 8, 74) + 12} />
           <line x1={xDc + wDc} y1={dcY} x2={xInv} y2={dcY} stroke={C.dc} strokeWidth={2} />
+          <Node x={xDc + wDc} y={dcY} color={C.dc} />
         </>
       )}
       {!dc && pv && inv && <line x1={xPv + wPv} y1={dcY} x2={xInv} y2={dcY} stroke={C.dc} strokeWidth={2} />}
-      {m.cables[0] && <WireTag x={(dcOutX + xInv) / 2} y={dcY - 6} text={m.cables.find((c) => /MPPT/.test(c.route))?.tag || "W1"} color={C.dc} />}
+      {m.cables[0] && (
+        <WireTag
+          x={(dcOutX + xInv) / 2}
+          y={dcY - 6}
+          text={`${m.cables.find((c) => /MPPT/.test(c.route))?.tag || "W1"}${drop("W2") || drop("W1")}`}
+          color={C.dc}
+        />
+      )}
+      {pv && inv && (
+        <>
+          <Polarity x={(dcOutX + xInv) / 2 - 12} y={dcY + 14} sign="+" />
+          <Polarity x={(dcOutX + xInv) / 2 + 12} y={dcY + 14} sign="−" />
+        </>
+      )}
+
 
       {/* ── الإنفرتر ─────────────────────────────────────────────────────── */}
       {inv && (
@@ -250,12 +369,22 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
               inv.vbat ? `BAT port: ${inv.vbat} V DC` : "",
             ].filter(Boolean)}
             accent={C.ac}
+            id="inv"
+            pick={pick}
+            active={active === "inv"}
           />
+
           <text x={xInv + wInv / 2} y={invY + invH + 12} textAnchor="middle" fontFamily={F} fontSize={8.2} fill={C.soft}>
             {inv.model}
           </text>
           <text x={xInv - 6} y={dcY + 12} textAnchor="end" fontFamily={F} fontSize={7.6} fill={C.dc}>DC IN</text>
           <text x={xInv + wInv + 6} y={dcY + 12} fontFamily={F} fontSize={7.6} fill={C.ac}>AC OUT</text>
+          {pv?.strVoc && inv.mpptRange && (
+            <text x={xInv + wInv / 2} y={invY - 8} textAnchor="middle" fontFamily={F} fontSize={7.6} fill={C.soft}>
+              {`STRING CHECK: Voc ${Math.round(pv.strVoc)} V within ${inv.mpptRange}`}
+            </text>
+          )}
+
         </>
       )}
 
@@ -279,13 +408,18 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
                 bat.current ? `Max current ≈ ${bat.current} A` : "",
               ].filter(Boolean)}
               accent={C.dc}
+              id="bat"
+              pick={pick}
+              active={active === "bat"}
             />
             <BatterySymbol x={bankX + bankW + 14} y={batY} />
             <text x={bankX} y={batY + 50} fontFamily={F} fontSize={8} fill={C.soft}>{bat.model}</text>
             <line x1={bankX + bankW} y1={batY} x2={m.batBox ? boxX : riser} y2={batY} stroke={C.dc} strokeWidth={2} />
+            <Polarity x={bankX + bankW + 24} y={batY - 14} sign="+" />
+            <Polarity x={bankX + bankW + 24} y={batY + 26} sign="−" />
             {m.batBox ? (
               <>
-                <Block x={boxX} y={batY - 28} w={108} h={62} title="BATTERY BOX" lines={[m.batBox.rating]} accent={C.dc} />
+                <Block x={boxX} y={batY - 28} w={108} h={62} title="BATTERY BOX" lines={[m.batBox.rating, "Icu 10 kA"]} accent={C.dc} id="bat" pick={pick} active={active === "bat"} />
                 <BreakerSymbol x={boxX + 78} y={batY + 6} />
                 <line x1={boxX + 108} y1={batY} x2={riser} y2={batY} stroke={C.dc} strokeWidth={2} />
               </>
@@ -293,12 +427,14 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
               bat.breakerA && (
                 <>
                   <BreakerSymbol x={boxX + 40} y={batY + 4} />
-                  <text x={boxX + 50} y={batY + 26} fontFamily={F} fontSize={7.8} fill={C.ink}>{`DC ${bat.breakerA} A 2P`}</text>
+                  <text x={boxX + 50} y={batY + 26} fontFamily={F} fontSize={7.8} fill={C.ink}>{`DC ${bat.breakerA} A 2P — 10 kA`}</text>
                 </>
               )
             )}
             <line x1={riser} y1={batY} x2={riser} y2={invY + invH} stroke={C.dc} strokeWidth={2} />
-            <WireTag x={riser + 20} y={batY - 8} text={m.cables.find((c) => /BAT/.test(c.route))?.tag || "W3"} color={C.dc} />
+            <Node x={riser} y={batY} color={C.dc} />
+            <Node x={riser} y={invY + invH} color={C.dc} />
+            <WireTag x={riser + 26} y={batY - 8} text={`${m.cables.find((c) => /BAT/.test(c.route))?.tag || "W3"}${drop("W3")}`} color={C.dc} />
             <text x={riser + 6} y={invY + invH + 26} fontFamily={F} fontSize={7.6} fill={C.dc}>BAT</text>
           </>
         );
@@ -308,7 +444,9 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
       {ac && inv && (
         <>
           <line x1={xInv + wInv} y1={dcY} x2={xAc} y2={dcY} stroke={C.ac} strokeWidth={2} />
-          <WireTag x={(xInv + wInv + xAc) / 2} y={dcY - 6} text="W4" color={C.ac} />
+          <WireTag x={(xInv + wInv + xAc) / 2} y={dcY - 6} text={`W4${drop("W4")}`} color={C.ac} />
+          <PhaseMark x={(xInv + wInv + xAc) / 2} y={dcY} phase3={phase3} />
+          <Node x={xAc} y={dcY} color={C.ac} />
           <Block
             x={xAc}
             y={invY - 6}
@@ -317,11 +455,16 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
             title="AC PROTECTION BOARD"
             lines={[
               `Main ${ac.breakerA} A ${ac.phase3 ? "4P" : "2P"}`,
-              ac.phase3 ? "L1 / L2 / L3 / N" : "L / N",
+              ac.phase3 ? "L1 / L2 / L3 / N / PE" : "L / N / PE",
+              `Icu ${ac.phase3 || ac.breakerA > 63 ? 15 : 6} kA`,
               "AC SPD Type 2",
             ]}
             accent={C.ac}
+            id="ac"
+            pick={pick}
+            active={active === "ac"}
           />
+
           <BreakerSymbol x={xAc + wAc - 24} y={dcY} />
           <SpdSymbol x={xAc + 22} y={dcY + 26} />
         </>
@@ -331,14 +474,18 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
       {m.ats && ac && (
         <>
           <line x1={xAc + wAc} y1={dcY} x2={xAts} y2={dcY} stroke={C.ac} strokeWidth={2} />
+          <Node x={xAts} y={dcY} color={C.ac} />
           <Block
             x={xAts}
             y={invY}
             w={wAts}
             h={invH}
             title="ATS CHANGEOVER"
-            lines={["Grid / Generator", m.ats.kva ? `Generator ${m.ats.kva} kVA` : "MCCB 4P 175 A"]}
+            lines={["Grid / Generator", m.ats.kva ? `Generator ${m.ats.kva} kVA` : "MCCB 4P 175 A", phase3 ? "4 Pole" : "2 Pole"]}
             accent={C.ac}
+            id="ats"
+            pick={pick}
+            active={active === "ats"}
           />
         </>
       )}
@@ -359,6 +506,9 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
                   title="UTILITY GRID"
                   lines={[m.title.phase]}
                   accent={C.ac}
+                  id="grid"
+                  pick={pick}
+                  active={active === "grid"}
                 />
                 <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
                 <line x1={xOut - 26} y1={dcY} x2={xOut - 26} y2={dcY - 50} stroke={C.ac} strokeWidth={2} />
@@ -373,33 +523,58 @@ export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
               title={m.battery ? "BACKUP / SITE LOADS" : "SITE LOADS"}
               lines={[m.title.phase, ""].filter(Boolean)}
               accent={C.ac}
+              id="loads"
+              pick={pick}
+              active={active === "loads"}
             />
             <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
             <line x1={xOut - 26} y1={dcY} x2={xOut - 26} y2={loadY} stroke={C.ac} strokeWidth={2} />
             <line x1={xOut - 26} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={2} markerEnd="url(#sld-arrow)" />
-            <WireTag x={(from + xOut) / 2} y={dcY - 6} text="W5" color={C.ac} />
+            <Node x={xOut - 26} y={dcY} color={C.ac} />
+            <PhaseMark x={(from + xOut) / 2 + 26} y={dcY} phase3={phase3} />
+            <WireTag x={(from + xOut) / 2} y={dcY - 6} text={`W5${drop("W5")}`} color={C.ac} />
           </>
         );
       })()}
 
-      {/* ── قضيب التأريض (فقط إذا كانت حفرة التأريض ضمن الأصناف) ───────────── */}
-      {m.earth && (
-        <>
-          <line x1={xPv} y1={earthY} x2={xOut + wOut} y2={earthY} stroke={C.earth} strokeWidth={2} strokeDasharray="7 4" />
-          {[xPv + 60, dc ? xDc + wDc / 2 : null, inv ? xInv + wInv / 2 : null, ac ? xAc + wAc / 2 : null].filter(
-            (v): v is number => v !== null,
-          ).map((x) => (
-            <line key={x} x1={x} y1={earthY - 22} x2={x} y2={earthY} stroke={C.earth} strokeWidth={1.4} strokeDasharray="4 3" />
-          ))}
-          <EarthSymbol x={xOut + wOut - 40} y={earthY + 8} />
-          <text x={xOut + wOut - 40} y={earthY - 13} textAnchor="middle" fontFamily={F} fontSize={8.4} fill={C.earth}>
-            EARTHING PIT
-          </text>
-          <text x={xPv} y={earthY - 13} fontFamily={F} fontSize={8.4} fontWeight={700} fill={C.earth}>
-            PE — EARTH BONDING BUS 1×16 mm²
-          </text>
-        </>
-      )}
+      {/* ── ناقل التأريض الرئيسي الموحد (PE) ─────────────────────────────── */}
+      {(() => {
+        const bonds = [
+          xPv + 60,
+          dc ? xDc + wDc / 2 : null,
+          bat ? xInv - 244 : null,
+          inv ? xInv + wInv / 2 : null,
+          ac ? xAc + wAc / 2 : null,
+          m.ats ? xAts + wAts / 2 : null,
+          xOut + 40,
+        ].filter((v): v is number => v !== null);
+        return (
+          <g style={pick ? { cursor: "pointer" } : undefined} onClick={pick ? () => pick("earth") : undefined}>
+            <line
+              x1={xPv}
+              y1={earthY}
+              x2={xOut + wOut}
+              y2={earthY}
+              stroke={C.earth}
+              strokeWidth={active === "earth" ? 3.4 : 2.4}
+            />
+            {bonds.map((x) => (
+              <g key={x}>
+                <line x1={x} y1={earthY - 26} x2={x} y2={earthY} stroke={C.earth} strokeWidth={1.4} strokeDasharray="4 3" />
+                <Node x={x} y={earthY} color={C.earth} />
+              </g>
+            ))}
+            <EarthSymbol x={xOut + wOut - 40} y={earthY + 8} />
+            <text x={xOut + wOut - 40} y={earthY + 34} textAnchor="middle" fontFamily={F} fontSize={8} fill={C.earth}>
+              {m.earth ? "EARTHING PIT < 5 Ω" : "EARTH ELECTRODE"}
+            </text>
+            <text x={xPv} y={earthY - 13} fontFamily={F} fontSize={8.4} fontWeight={700} fill={C.earth}>
+              PE — MAIN EARTHING BUS 1×16 mm² (frames 1×6 mm²)
+            </text>
+          </g>
+        );
+      })()}
+
     </svg>
   );
 }
@@ -410,9 +585,16 @@ export default function SldDiagram({ params, number, actions }: Props) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [full, setFull] = useState(false);
+  const [theme, setTheme] = useState<SldTheme>("paper");
+  const [picked, setPicked] = useState<string | null>(null);
+  const [fitH, setFitH] = useState<number | null>(null);
+
   const [rot, setRot] = useState<{ on: boolean; w: number; h: number }>({ on: false, w: 0, h: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
+  const calcs: CableCalc[] = useMemo(() => (model ? cableCalcs(model) : []), [model]);
+  const items = useMemo(() => (model ? inspectorItems(model) : {}), [model]);
+
 
   /**
    * في ملء الشاشة على الهواتف الطولية يُدار الرسم العريض 90° ليملأ الشاشة كاملة
@@ -426,14 +608,28 @@ export default function SldDiagram({ params, number, actions }: Props) {
       const ch = box.clientHeight;
       if (!cw || !ch) return;
       const portrait = ch > cw * 1.15;
-      setRot(full && portrait ? { on: true, w: ch, h: cw } : { on: false, w: 0, h: 0 });
+      const rotated = full && portrait;
+      setRot(rotated ? { on: true, w: ch, h: cw } : { on: false, w: 0, h: 0 });
+      // ملاءمة تلقائية: يضبط ارتفاع مساحة العرض على نسبة الرسم فيظهر كبيراً وكاملاً دون قطع.
+      const svg = box.querySelector("svg");
+      const vb = svg?.getAttribute("viewBox")?.split(/\s+/).map(Number);
+      const vw = vb && vb.length === 4 ? (vb[2] as number) : 1240;
+      const vh = vb && vb.length === 4 ? (vb[3] as number) : 520;
+      if (!rotated && !full) {
+        const ideal = Math.round((cw * vh) / vw) + 8;
+        setFitH(Math.max(300, Math.min(Math.round(window.innerHeight * 0.72), ideal)));
+      } else {
+        setFitH(null);
+      }
       setZoom(1);
       setPan({ x: 0, y: 0 });
+
     };
-    fitBox();
+    const t = window.setTimeout(fitBox, 60);
     window.addEventListener("resize", fitBox);
-    return () => window.removeEventListener("resize", fitBox);
+    return () => { window.clearTimeout(t); window.removeEventListener("resize", fitBox); };
   }, [full, model]);
+
 
   if (!model) return null;
 
@@ -461,6 +657,14 @@ export default function SldDiagram({ params, number, actions }: Props) {
       </button>
       <button
         type="button"
+        onClick={() => setTheme((t) => (t === "paper" ? "blueprint" : "paper"))}
+        aria-label={theme === "paper" ? "نمط المخطط الأزرق" : "نمط الورق الأبيض"}
+        className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand"
+      >
+        <Palette className="size-4" />
+      </button>
+      <button
+        type="button"
         onClick={() => { setFull((v) => !v); setPan({ x: 0, y: 0 }); }}
         aria-label={full ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
         className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand"
@@ -470,15 +674,45 @@ export default function SldDiagram({ params, number, actions }: Props) {
     </div>
   );
 
+  const inspected = picked ? items[picked] : undefined;
+
+  const inspector = inspected && (
+    <div className="absolute inset-x-2 bottom-2 z-10 max-h-[52%] overflow-y-auto rounded-lg border border-border bg-card/95 p-3 shadow-lg backdrop-blur" dir="rtl">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-black text-skyline">{inspected.title}</p>
+          <p className="text-[10px] text-muted-foreground">{inspected.subtitle}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setPicked(null)}
+          aria-label="إغلاق بطاقة المكوّن"
+          className="grid size-7 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-brand hover:text-brand"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+      <div className="mt-2 grid gap-1 sm:grid-cols-2">
+        {inspected.rows.map(([label, value]) => (
+          <div key={label} className="flex items-center justify-between gap-2 rounded-md bg-muted/60 px-2.5 py-1">
+            <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
+            <span className="text-[10.5px] font-black" dir="ltr">{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const canvas = (
     <div
       ref={boxRef}
-      className={`relative overflow-hidden rounded-md border border-border bg-white touch-none ${full ? "h-[calc(100vh-6.5rem)]" : "h-[62vh] min-h-[320px]"}`}
+      className={`relative overflow-hidden rounded-md border border-border touch-none ${full ? "h-[calc(100vh-6.5rem)]" : "min-h-[300px]"}`}
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
-      style={{ cursor: "grab" }}
+      style={{ cursor: "grab", background: theme === "paper" ? "#ffffff" : "#0b2545", ...(full || !fitH ? {} : { height: fitH }) }}
+
       dir="ltr"
     >
       <div
@@ -496,8 +730,9 @@ export default function SldDiagram({ params, number, actions }: Props) {
             : { transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "50% 50%" }
         }
       >
-        <SldSvg m={model} fit />
+        <SldSvg m={model} fit theme={theme} pick={setPicked} active={picked} calcs={calcs} />
       </div>
+      {inspector}
     </div>
   );
 
@@ -505,6 +740,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
   if (full) {
     return (
       <div className="fixed inset-0 z-[70] flex flex-col gap-2 bg-background p-3">
+
         <div className="flex items-center justify-between gap-2">
           <h3 className="truncate text-sm font-black">المخطط الكهربائي أحادي الخط (SLD)</h3>
           {controls}
@@ -534,8 +770,9 @@ export default function SldDiagram({ params, number, actions }: Props) {
 
       <div className="mt-3">{canvas}</div>
       <p className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، وزر ملء الشاشة لعرضه بالكامل.
+        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، واضغط أي مكوّن لعرض مواصفاته الفنية.
       </p>
+
 
 
       {/* كتلة بيانات اللوحة الرسمية */}
@@ -565,29 +802,41 @@ export default function SldDiagram({ params, number, actions }: Props) {
 
       {model.cables.length > 0 && (
         <>
-          <h4 className="mt-4 text-xs font-black text-skyline">جدول الكابلات المناسبة</h4>
+          <h4 className="mt-4 text-xs font-black text-skyline">جدول الكابلات والحسابات الكهربائية</h4>
           <div className="mt-2 -mx-1 overflow-x-auto px-1" data-quote-scroll dir="ltr">
-            <table className="w-full min-w-[430px] border-collapse text-[10.5px]">
+            <table className="w-full min-w-[620px] border-collapse text-[10.5px]">
               <thead>
                 <tr className="bg-brand text-brand-foreground">
                   <th className="border border-border px-2 py-1.5 font-black">TAG</th>
                   <th className="border border-border px-2 py-1.5 font-black">ROUTE</th>
                   <th className="border border-border px-2 py-1.5 font-black">CABLE</th>
+                  <th className="border border-border px-2 py-1.5 font-black">L (m)</th>
+                  <th className="border border-border px-2 py-1.5 font-black">Vdrop</th>
+                  <th className="border border-border px-2 py-1.5 font-black">Icu</th>
                 </tr>
               </thead>
               <tbody>
-                {model.cables.map((c) => (
+                {calcs.map((c) => (
                   <tr key={c.tag + c.route} className="odd:bg-muted/40">
                     <td className="border border-border px-2 py-1 text-center font-black">{c.tag}</td>
                     <td className="border border-border px-2 py-1">{c.route}</td>
                     <td className="border border-border px-2 py-1">{c.spec}</td>
+                    <td className="border border-border px-2 py-1 text-center">{c.length}</td>
+                    <td className={`border border-border px-2 py-1 text-center font-black ${c.dropPct !== null && c.dropPct > 3 ? "text-brand" : ""}`}>
+                      {c.dropPct !== null ? `${c.dropPct}%` : "—"}
+                    </td>
+                    <td className="border border-border px-2 py-1 text-center">{c.kA ? `${c.kA} kA` : "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p className="mt-1 text-[9.5px] text-muted-foreground" dir="rtl">
+            هبوط الجهد محسوب على أطوال تصميمية نمطية (نحاس 0.0175 Ω·mm²/م) ويُراجع بعد المسح الموقعي؛ الحد المقبول 3%.
+          </p>
         </>
       )}
+
 
       {model.bom.length > 0 && (
         <>
