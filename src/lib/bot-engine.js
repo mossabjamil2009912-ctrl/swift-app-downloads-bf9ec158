@@ -4217,7 +4217,12 @@ export function runStateMachine(__session, __parsed, __itemPrices) {
   } else if (step === 'done') { response = noOpt(m('back'));
   } else if (step === 'buy_ask') {
     if (text === 'sales_contact') { salesHandoff('التواصل مع المبيعات'); step = 'done'; response = salesLinkMsg(); }
-    else if (text === 'buy_invoice' || isYesT(text) || /شراء|فاتور/.test(String(text))) { salesHandoff('متابعة الشراء'); response = goBuy(); }
+    else if (text === 'aq_sld' || text === 'sld_yes' || /مخطط|sld/i.test(String(text))) { make_sld = true; step = 'buy_ask'; response = ''; followup_kind = ''; }
+    else if (text === 'aq_study' || text === 'study_yes' || /pvsyst|دراسة|دراسه/i.test(String(text))) {
+      if (cityKnown()) { send_study_file = true; step = 'sld_ask'; response = ''; followup_kind = ''; }
+      else { city = ''; step = 'study_city_gov'; response = studySiteAsk(); }
+    }
+    else if (text === 'aq_buy' || text === 'buy_invoice' || isYesT(text) || /شراء|فاتور/.test(String(text))) { salesHandoff('متابعة الشراء'); response = goBuy(); }
     else { response = noOpt(buyAskMsg()); }
 
 
