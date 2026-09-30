@@ -526,7 +526,7 @@ export function SldSvg({
             <Node x={riser} y={invY + invH} color={C.dc} />
             <WireTag x={riser + 26} y={batY - 8} text={`${m.cables.find((c) => /BAT/.test(c.route))?.tag || "W3"}${drop("W3")}`} color={C.dc} />
             <text x={riser + 6} y={invY + invH + 26} fontFamily={F} fontSize={7.6} fill={C.dc}>BAT</text>
-          </>
+          </g>
         );
       })()}
 
