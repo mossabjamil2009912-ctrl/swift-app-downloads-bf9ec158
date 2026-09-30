@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, BatteryCharging, Check, ChevronDown, Copy, Download, Eye, FileText, Gauge, Info, Layers, Link2, ListChecks, MessageCircle, Play, Share2, Sparkles, Sun, Users, Wrench, X, Zap } from "lucide-react";
 import QRCode from "qrcode";
 import { CATEGORIES, findProduct, matchCompatibleProducts, productsByCategory, quickSpecs, type Product, type ProductCategory, type ProductFile } from "@/lib/products-data";
-import { isVoiceOn, isVoicePlatform, speakScreen, speakScreenAfterCurrent, stopSpeaking } from "@/lib/voice-guide";
+import { isVoiceOn, isVoicePlatform, prepareSpeech, speakScreen, speakScreenAfterCurrent, stopSpeaking } from "@/lib/voice-guide";
 import ProductVideoPlayer from "@/components/product-video";
 import { getProductVideo, videoIntroNarration } from "@/lib/product-video";
 import { hasModelDatasheet, openInverterDatasheet, downloadInverterDatasheet } from "@/lib/inverter-datasheet-pdf";
@@ -162,11 +162,21 @@ function CategoryView({ category, onOpen, onBack }: { category: ProductCategory;
 }
 
 function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void }) {
+  // نبدأ تحضير الشرح الصوتي قبل فتح المنتج، حتى ينطلق مع الفيديو بلا انتظار.
+  const warm = () => {
+    const v = getProductVideo(product.id);
+    if (v) prepareSpeech(videoIntroNarration(product, v), true);
+  };
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card text-right shadow-sm transition hover:shadow-md">
-      <button type="button" onClick={onOpen} aria-label={product.name} className="block aspect-[4/5] w-full overflow-hidden bg-background">
+    <article
+      onPointerEnter={warm}
+      onTouchStart={warm}
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card text-right shadow-sm transition hover:shadow-md"
+    >
+      <button type="button" onClick={() => { warm(); onOpen(); }} aria-label={product.name} className="block aspect-[4/5] w-full overflow-hidden bg-background">
         <img src={product.image} alt={product.name} loading="lazy" decoding="async" width={800} height={1000} className="size-full scale-105 object-contain p-1 transition duration-500 group-hover:scale-110" />
       </button>
+
       <div className="flex flex-1 flex-col gap-0.5 border-t border-border/70 px-2.5 pb-2.5 pt-2">
         <span className="text-[9px] font-bold text-skyline lg:text-[10px]">{product.brand}</span>
         <h3 className="line-clamp-2 text-[10.5px] font-bold leading-tight text-navy lg:text-[12px]">{product.name}</h3>
@@ -174,7 +184,7 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
         <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-full bg-navy-soft px-2 py-0.5 text-[11px] font-black text-navy lg:text-xs" dir="ltr">
           <Zap className="size-3" />{product.power}
         </span>
-        <button type="button" onClick={onOpen} className="mt-auto inline-flex w-full items-center justify-center gap-1 rounded-full bg-brand px-2 py-1.5 text-[11px] font-bold text-brand-foreground shadow-sm transition hover:opacity-90 lg:text-xs">
+        <button type="button" onClick={() => { warm(); onOpen(); }} className="mt-auto inline-flex w-full items-center justify-center gap-1 rounded-full bg-brand px-2 py-1.5 text-[11px] font-bold text-brand-foreground shadow-sm transition hover:opacity-90 lg:text-xs">
           <ArrowRight className="size-3.5" /> عرض المنتج
         </button>
       </div>
