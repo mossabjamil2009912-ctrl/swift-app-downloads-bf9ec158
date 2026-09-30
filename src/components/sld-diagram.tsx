@@ -472,14 +472,18 @@ export function SldSvg({
       {m.ats && ac && (
         <>
           <line x1={xAc + wAc} y1={dcY} x2={xAts} y2={dcY} stroke={C.ac} strokeWidth={2} />
+          <Node x={xAts} y={dcY} color={C.ac} />
           <Block
             x={xAts}
             y={invY}
             w={wAts}
             h={invH}
             title="ATS CHANGEOVER"
-            lines={["Grid / Generator", m.ats.kva ? `Generator ${m.ats.kva} kVA` : "MCCB 4P 175 A"]}
+            lines={["Grid / Generator", m.ats.kva ? `Generator ${m.ats.kva} kVA` : "MCCB 4P 175 A", phase3 ? "4 Pole" : "2 Pole"]}
             accent={C.ac}
+            id="ats"
+            pick={pick}
+            active={active === "ats"}
           />
         </>
       )}
@@ -500,6 +504,9 @@ export function SldSvg({
                   title="UTILITY GRID"
                   lines={[m.title.phase]}
                   accent={C.ac}
+                  id="grid"
+                  pick={pick}
+                  active={active === "grid"}
                 />
                 <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
                 <line x1={xOut - 26} y1={dcY} x2={xOut - 26} y2={dcY - 50} stroke={C.ac} strokeWidth={2} />
@@ -514,17 +521,60 @@ export function SldSvg({
               title={m.battery ? "BACKUP / SITE LOADS" : "SITE LOADS"}
               lines={[m.title.phase, ""].filter(Boolean)}
               accent={C.ac}
+              id="loads"
+              pick={pick}
+              active={active === "loads"}
             />
             <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
             <line x1={xOut - 26} y1={dcY} x2={xOut - 26} y2={loadY} stroke={C.ac} strokeWidth={2} />
             <line x1={xOut - 26} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={2} markerEnd="url(#sld-arrow)" />
-            <WireTag x={(from + xOut) / 2} y={dcY - 6} text="W5" color={C.ac} />
+            <Node x={xOut - 26} y={dcY} color={C.ac} />
+            <PhaseMark x={(from + xOut) / 2 + 26} y={dcY} phase3={phase3} />
+            <WireTag x={(from + xOut) / 2} y={dcY - 6} text={`W5${drop("W5")}`} color={C.ac} />
           </>
         );
       })()}
 
-      {/* ── قضيب التأريض (فقط إذا كانت حفرة التأريض ضمن الأصناف) ───────────── */}
-      {m.earth && (
+      {/* ── ناقل التأريض الرئيسي الموحد (PE) ─────────────────────────────── */}
+      {(() => {
+        const bonds = [
+          xPv + 60,
+          dc ? xDc + wDc / 2 : null,
+          bat ? xInv - 244 : null,
+          inv ? xInv + wInv / 2 : null,
+          ac ? xAc + wAc / 2 : null,
+          m.ats ? xAts + wAts / 2 : null,
+          xOut + 40,
+        ].filter((v): v is number => v !== null);
+        return (
+          <g style={pick ? { cursor: "pointer" } : undefined} onClick={pick ? () => pick("earth") : undefined}>
+            <line
+              x1={xPv}
+              y1={earthY}
+              x2={xOut + wOut}
+              y2={earthY}
+              stroke={C.earth}
+              strokeWidth={active === "earth" ? 3.4 : 2.4}
+            />
+            {bonds.map((x) => (
+              <g key={x}>
+                <line x1={x} y1={earthY - 26} x2={x} y2={earthY} stroke={C.earth} strokeWidth={1.4} strokeDasharray="4 3" />
+                <Node x={x} y={earthY} color={C.earth} />
+              </g>
+            ))}
+            <EarthSymbol x={xOut + wOut - 40} y={earthY + 8} />
+            <text x={xOut + wOut - 40} y={earthY + 34} textAnchor="middle" fontFamily={F} fontSize={8} fill={C.earth}>
+              {m.earth ? "EARTHING PIT < 5 Ω" : "EARTH ELECTRODE"}
+            </text>
+            <text x={xPv} y={earthY - 13} fontFamily={F} fontSize={8.4} fontWeight={700} fill={C.earth}>
+              PE — MAIN EARTHING BUS 1×16 mm² (frames 1×6 mm²)
+            </text>
+          </g>
+        );
+      })()}
+
+      {false && m.earth && (
+
         <>
           <line x1={xPv} y1={earthY} x2={xOut + wOut} y2={earthY} stroke={C.earth} strokeWidth={2} strokeDasharray="7 4" />
           {[xPv + 60, dc ? xDc + wDc / 2 : null, inv ? xInv + wInv / 2 : null, ac ? xAc + wAc / 2 : null].filter(
