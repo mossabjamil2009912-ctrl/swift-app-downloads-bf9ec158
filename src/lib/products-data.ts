@@ -997,8 +997,21 @@ function expandProduct(base: Product): Product[] {
 /** قائمة العرض في الكتالوج: كل قدرة إنفرتر صنف مستقل بدل النطاقات. */
 export const CATALOG_PRODUCTS: Product[] = PRODUCTS.flatMap(expandProduct);
 
+function capacityKWh(p: Product) {
+  const src = `${p.power ?? ""} ${p.name ?? ""}`;
+  const kwh = src.match(/([\d.]+)\s*kwh/i);
+  if (kwh?.[1]) return parseFloat(kwh[1]);
+  const wh = src.match(/([\d.]+)\s*wh/i);
+  if (wh?.[1]) return parseFloat(wh[1]) / 1000;
+  return 0;
+}
+
 export function productsByCategory(cat: ProductCategory) {
-  return CATALOG_PRODUCTS.filter((p) => p.category === cat);
+  const items = CATALOG_PRODUCTS.filter((p) => p.category === cat);
+  if (cat === "batteries") {
+    return [...items].sort((a, b) => capacityKWh(b) - capacityKWh(a));
+  }
+  return items;
 }
 export function findProduct(id: string) {
   return CATALOG_PRODUCTS.find((p) => p.id === id) ?? CATALOG_PRODUCTS.find((p) => p.baseId === id) ?? PRODUCTS.find((p) => p.id === id);
