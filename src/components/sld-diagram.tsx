@@ -159,16 +159,18 @@ function EarthSymbol({ x, y }: { x: number; y: number }) {
 
 /** صندوق مكوّن هندسي بعنوان وأسطر مواصفات، قابل للنقر لإظهار بطاقة فحصه. */
 function Block({
-  x, y, w, h, title, lines, accent, pick, active,
+  x, y, w, h, title, lines, accent, id, pick, active,
 }: {
   x: number; y: number; w: number; h: number; title: string; lines: string[]; accent: string;
-  pick?: ((id: string) => void) | undefined; id?: string | undefined; active?: boolean | undefined;
+  id?: string | undefined; pick?: ((id: string) => void) | undefined; active?: boolean | undefined;
 }) {
-  const id = arguments.length ? undefined : undefined;
-  void id;
+  const clickable = Boolean(id && pick);
   return (
-    <g style={pick ? { cursor: "pointer" } : undefined}>
-      <rect x={x} y={y} width={w} height={h} fill={C.fill} stroke={active ? accent : C.frame} strokeWidth={active ? 2.6 : 1.6} />
+    <g
+      style={clickable ? { cursor: "pointer" } : undefined}
+      onClick={clickable ? () => pick!(id!) : undefined}
+    >
+      <rect x={x} y={y} width={w} height={h} fill={C.fill} stroke={active ? accent : C.frame} strokeWidth={active ? 2.8 : 1.6} />
       <rect x={x} y={y} width={w} height={16} fill={C.band} stroke={C.frame} strokeWidth={1.2} />
       <rect x={x} y={y} width={3} height={h} fill={accent} />
       <text x={x + w / 2} y={y + 12} textAnchor="middle" fontFamily={F} fontSize={9.5} fontWeight={700} fill={C.ink}>
@@ -179,9 +181,15 @@ function Block({
           {l}
         </text>
       ))}
+      {clickable && (
+        <text x={x + w - 6} y={y + h - 6} textAnchor="end" fontFamily={F} fontSize={7} fill={C.soft}>
+          ⓘ
+        </text>
+      )}
     </g>
   );
 }
+
 
 
 /** نص تسمية كابل على المسار. */
