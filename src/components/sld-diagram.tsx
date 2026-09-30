@@ -608,18 +608,20 @@ export default function SldDiagram({ params, number, actions }: Props) {
       const portrait = ch > cw * 1.15;
       const rotated = full && portrait;
       setRot(rotated ? { on: true, w: ch, h: cw } : { on: false, w: 0, h: 0 });
-      // ملاءمة تلقائية: يكبّر الرسم ليملأ مساحة العرض عمودياً أيضاً بدل بقائه شريطاً في الوسط.
+      // ملاءمة تلقائية: يضبط ارتفاع مساحة العرض على نسبة الرسم فيظهر كبيراً وكاملاً دون قطع.
       const svg = box.querySelector("svg");
       const vb = svg?.getAttribute("viewBox")?.split(/\s+/).map(Number);
       const vw = vb && vb.length === 4 ? (vb[2] as number) : 1240;
       const vh = vb && vb.length === 4 ? (vb[3] as number) : 520;
-      const bw = rotated ? ch : cw;
-      const bh = rotated ? cw : ch;
-      const fitScale = Math.min(bw / vw, bh / vh);
-      const coverScale = Math.min(bw / vw, bh / vh) === bw / vw ? bh / vh : bw / vw;
-      const z = fitScale > 0 ? Math.min(2.6, Math.max(1, coverScale / fitScale)) : 1;
-      setZoom(+z.toFixed(2));
+      if (!rotated && !full) {
+        const ideal = Math.round((cw * vh) / vw) + 8;
+        setFitH(Math.max(300, Math.min(Math.round(window.innerHeight * 0.72), ideal)));
+      } else {
+        setFitH(null);
+      }
+      setZoom(1);
       setPan({ x: 0, y: 0 });
+
     };
     const t = window.setTimeout(fitBox, 60);
     window.addEventListener("resize", fitBox);
