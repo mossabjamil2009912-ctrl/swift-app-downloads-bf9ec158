@@ -548,37 +548,27 @@ export function quoteSpeech(quote: {
     || quote.items.some((it) => /منظومة|نظام|system|系统/i.test(it.name || ""))
     || (quote.items.some((it) => /لوح|panel/i.test(it.name || ""))
       && quote.items.some((it) => /انفرتر|إنفرتر|inverter/i.test(it.name || "")));
-  // في جميع الأنظمة عدا السكني: نشرح للعميل الخيارات الأربعة المتاحة بعد عرض السعر الرسمي.
-  const full = opts?.residential === false;
-  const tailAr = full
-    ? "وَيُمْكِنُكَ: مُتَابَعَةُ الشِّرَاءِ لِلانْتِقَالِ إِلَى خُطُوَاتِ شِرَاءِ المَنْظُومَة. التَّوَاصُلُ مَعَ المَبِيعَاتِ لِلتَّوَاصُلِ مَعَ فَرِيقِ المَبِيعَاتِ وَالاسْتِفْسَارِ أَوْ طَلَبِ عَرْضِ سِعْرٍ رَسْمِيّ. دِرَاسَةُ بِي فِي سِسْت لِلْحُصُولِ عَلَى دِرَاسَةٍ تَفْصِيلِيَّةٍ لِإِنْتَاجِيَّةِ المَنْظُومَة. مُخَطَّطُ إِسْ إِلْ دِي لِلْحُصُولِ عَلَى المُخَطَّطِ الكَهْرَبَائِيِّ الأُحَادِيِّ لِلْمَنْظُومَة"
-    : "وَيُمْكِنُكَ مُتَابَعَةُ الشِّرَاءِ أَوِ التَّوَاصُلُ مَعَ المَبِيعَات";
-  const tailEn = full
-    ? "You can: continue the purchase to move to the system purchase steps. Contact sales to reach the sales team for questions or an official quote. PVsyst study to get a detailed system production study. SLD diagram to get the system's single line electrical diagram"
-    : "You can continue the purchase or contact sales";
-  const tailZh = full
-    ? "您可以：继续购买，进入系统购买步骤；联系销售，与销售团队咨询或申请正式报价；PVsyst研究，获取系统发电量详细研究；SLD图纸，获取系统单线电气图"
-    : "您可以继续购买或联系销售";
+  // نص قصير جداً: كل ثانية إضافية في النص تعني انتظاراً أطول لتوليد الصوت،
+  // والأزرار الأربعة معروضة أمام العميل فلا حاجة لسردها صوتياً.
+  const tailAr = "يُمْكِنُكَ مُتَابَعَةُ الشِّرَاءِ أَوِ اخْتِيَارُ مَا تُرِيدُ مِنَ الأَزْرَار";
+  const tailEn = "You can continue the purchase or pick any option shown";
+  const tailZh = "您可以继续购买或选择下方任一选项";
   // لا نهجّي رقم العرض ولا نسرد الأصناف ومواصفاتها؛ المستخدم يراها في الجدول أمامه.
   if (lang === "en") return [
     isSystem ? "Your system quote is ready" : "Your items quote is ready",
     t ? `at ${t} dollars` : "",
-    isSystem
-      ? `It includes the system warranty and engineering specifications. ${tailEn}`
-      : `It includes the factory warranty and full specifications. ${tailEn}`,
-  ].filter(Boolean).join(", ").replace(/, It includes/, ". It includes");
+    tailEn,
+  ].filter(Boolean).join(", ").replace(/, You can/, ". You can");
   if (lang === "zh") return [
     isSystem ? "您的系统报价已准备好" : "您的产品报价已准备好",
     t ? `总价${t}美元` : "",
-    isSystem ? `报价含系统质保与工程规格。${tailZh}` : `报价含原厂质保与完整规格。${tailZh}`,
+    tailZh,
   ].filter(Boolean).join("，");
   return [
     isSystem ? "عَرْضُ سِعْرِ المَنْظُومَةِ جَاهِز" : "عَرْضُ سِعْرِ الأَصْنَافِ جَاهِز",
     t ? `بِمَبْلَغِ ${t} دُولَار` : "",
-    isSystem
-      ? `يَشْمَلُ ضَمَانَ المَنْظُومَةِ وَالمُوَاصَفَاتِ الهَنْدَسِيَّة، ${tailAr}`
-      : `يَشْمَلُ الضَّمَانَ المَصْنَعِيَّ وَالمُوَاصَفَاتِ الكَامِلَة، ${tailAr}`,
-  ].filter(Boolean).join(". ").slice(0, 1200);
+    tailAr,
+  ].filter(Boolean).join(". ").slice(0, 600);
 
 }
 
