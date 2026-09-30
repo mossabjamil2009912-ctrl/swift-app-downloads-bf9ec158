@@ -410,25 +410,29 @@ export default function SldDiagram({ params, number, actions }: Props) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [full, setFull] = useState(false);
+  const [rot, setRot] = useState<{ on: boolean; w: number; h: number }>({ on: false, w: 0, h: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
 
-  /** يملأ مساحة العرض بالكامل: يكبّر الرسم حتى يغطي أقصر بُعد في الحاوية. */
+  /**
+   * في ملء الشاشة على الهواتف الطولية يُدار الرسم العريض 90° ليملأ الشاشة كاملة
+   * بدل ظهوره كشريط رقيق في الوسط.
+   */
   useEffect(() => {
-    const box = boxRef.current;
-    if (!box) return;
-    const svg = box.querySelector("svg");
-    const vb = svg?.getAttribute("viewBox")?.split(/\s+/).map(Number);
-    if (!vb || vb.length < 4) return;
-    const [, , vw, vh] = vb as [number, number, number, number];
-    const cw = box.clientWidth;
-    const ch = box.clientHeight;
-    if (!cw || !ch || !vw || !vh) return;
-    const meet = Math.min(cw / vw, ch / vh);
-    const cover = Math.max(cw / vw, ch / vh);
-    if (meet <= 0) return;
-    setZoom(+Math.min(6, Math.max(1, cover / meet)).toFixed(3));
-    setPan({ x: 0, y: 0 });
+    const fitBox = () => {
+      const box = boxRef.current;
+      if (!box) return;
+      const cw = box.clientWidth;
+      const ch = box.clientHeight;
+      if (!cw || !ch) return;
+      const portrait = ch > cw * 1.15;
+      setRot(full && portrait ? { on: true, w: ch, h: cw } : { on: false, w: 0, h: 0 });
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    };
+    fitBox();
+    window.addEventListener("resize", fitBox);
+    return () => window.removeEventListener("resize", fitBox);
   }, [full, model]);
 
   if (!model) return null;
