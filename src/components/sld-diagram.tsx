@@ -9,22 +9,82 @@ import logoAsset from "@/assets/actes-logo-sld.png.asset.json";
  * ثابتة على الورق وعلى الشاشة (DC / AC / Earth / Comm).
  */
 const C = {
-  dc: "#b4231f",
-  dcN: "#1b1b1b",
-  ac: "#0f3f9e",
-  earth: "#1a8a2a",
-  ink: "#111111",
-  frame: "#111111",
-  soft: "#6b7280",
-  fill: "#ffffff",
-  band: "#eef2f7",
-  brand: "#e2231a",
+  dc: "var(--sld-dc)",
+  dcN: "var(--sld-dcn)",
+  ac: "var(--sld-ac)",
+  earth: "var(--sld-earth)",
+  ink: "var(--sld-ink)",
+  frame: "var(--sld-frame)",
+  soft: "var(--sld-soft)",
+  fill: "var(--sld-fill)",
+  band: "var(--sld-band)",
+  brand: "var(--sld-brand)",
 };
+
+/** لوحان لونيان: الورقي القياسي للطباعة، والهندسي الأزرق للشاشة. */
+const THEMES = {
+  paper: {
+    "--sld-dc": "#b4231f",
+    "--sld-dcn": "#1b1b1b",
+    "--sld-ac": "#0f3f9e",
+    "--sld-earth": "#1a8a2a",
+    "--sld-ink": "#111111",
+    "--sld-frame": "#111111",
+    "--sld-soft": "#6b7280",
+    "--sld-fill": "#ffffff",
+    "--sld-band": "#eef2f7",
+    "--sld-brand": "#e2231a",
+  },
+  blueprint: {
+    "--sld-dc": "#ff9a93",
+    "--sld-dcn": "#dbe7ff",
+    "--sld-ac": "#8ec0ff",
+    "--sld-earth": "#7ce58e",
+    "--sld-ink": "#eaf2ff",
+    "--sld-frame": "#9fc4ff",
+    "--sld-soft": "#a7bfdd",
+    "--sld-fill": "#0b2545",
+    "--sld-band": "#14355f",
+    "--sld-brand": "#ff8078",
+  },
+} as const;
+
+export type SldTheme = keyof typeof THEMES;
 
 const F = "'Segoe UI', 'Tahoma', sans-serif";
 
 type SldActions = { onBackToQuote: () => void; onBuy: () => void; onStudy?: (() => void) | undefined };
 type Props = { params: Record<string, unknown> | null; number?: string | undefined; actions?: SldActions | undefined };
+
+/** نقطة توصيل عقدية ممتلئة كما في مخططات CAD. */
+function Node({ x, y, color }: { x: number; y: number; color: string }) {
+  return <circle cx={x} cy={y} r={3} fill={color} />;
+}
+
+/** علامة قطبية التيار المستمر (+ / −). */
+function Polarity({ x, y, sign }: { x: number; y: number; sign: "+" | "−" }) {
+  return (
+    <text x={x} y={y} textAnchor="middle" fontFamily={F} fontSize={11} fontWeight={700} fill={sign === "+" ? C.dc : C.dcN}>
+      {sign}
+    </text>
+  );
+}
+
+/** علامة عدد موصلات التيار المتردد على الخط (IEC). */
+function PhaseMark({ x, y, phase3 }: { x: number; y: number; phase3: boolean }) {
+  const n = phase3 ? 4 : 2;
+  return (
+    <g>
+      {Array.from({ length: n }).map((_, i) => (
+        <line key={i} x1={x + i * 4 - 6} y1={y + 5} x2={x + i * 4 - 1} y2={y - 5} stroke={C.ac} strokeWidth={1.2} />
+      ))}
+      <text x={x + 2} y={y - 9} textAnchor="middle" fontFamily={F} fontSize={7} fill={C.ac}>
+        {phase3 ? "L1 L2 L3 N" : "L N"}
+      </text>
+    </g>
+  );
+}
+
 
 
 /** رمز لوح شمسي قياسي. */
