@@ -1500,7 +1500,7 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
   // مسار الدعم الفني: مؤشر مراحل خاص به بدل مراحل عرض السعر
   const isSupportPath = step.startsWith("sup_");
   // شاشة عرض السعر الرسمي: أربعة أزرار مباشرة بألوان مميزة لكل خدمة
-  const isQuoteActions = !sldScreen && Boolean(view.quote) && (step === "qnext_ask" || step === "com_quote_ask" || step === "agr_quote_ask" || (studyFresh && !showStudyOnly));
+  const isQuoteActions = !sldScreen && Boolean(view.quote) && (step === "qnext_ask" || step === "res_quote_ask" || step === "com_quote_ask" || step === "agr_quote_ask" || step === "buy_ask" || (studyFresh && !showStudyOnly));
   // شاشة المخطط الكهربائي لا تطلب أي إدخال
   const showEntry = step !== "done" && !view.quote && !view.sld && !isProjectSelection && (step in ENTRY_PROMPTS || (view.needsInput && visibleOptions.length === 0));
 
