@@ -320,18 +320,36 @@ export function SldSvg({
             w={wDc}
             h={Math.max(pvH + 8, 74)}
             title="DC PROTECTION BOARD"
-            lines={[`${dc.ways} Way`, `Fuse ${dc.fuseA} A / 1000 V DC`, "DC Isolator", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
+            lines={[`${dc.ways} Way`, `Fuse gPV ${dc.fuseA} A / 1000 V DC`, "DC Isolator", "Icu 10 kA", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
             accent={C.dc}
+            id="dc"
+            pick={pick}
+            active={active === "dc"}
           />
           {Array.from({ length: drawnStrings }).map((_, i) => (
             <FuseSymbol key={i} x={xDc + wDc - 20} y={pvTop + i * rowH + 19} />
           ))}
           <SpdSymbol x={xDc + 22} y={pvTop + Math.max(pvH + 8, 74) + 12} />
           <line x1={xDc + wDc} y1={dcY} x2={xInv} y2={dcY} stroke={C.dc} strokeWidth={2} />
+          <Node x={xDc + wDc} y={dcY} color={C.dc} />
         </>
       )}
       {!dc && pv && inv && <line x1={xPv + wPv} y1={dcY} x2={xInv} y2={dcY} stroke={C.dc} strokeWidth={2} />}
-      {m.cables[0] && <WireTag x={(dcOutX + xInv) / 2} y={dcY - 6} text={m.cables.find((c) => /MPPT/.test(c.route))?.tag || "W1"} color={C.dc} />}
+      {m.cables[0] && (
+        <WireTag
+          x={(dcOutX + xInv) / 2}
+          y={dcY - 6}
+          text={`${m.cables.find((c) => /MPPT/.test(c.route))?.tag || "W1"}${drop("W2") || drop("W1")}`}
+          color={C.dc}
+        />
+      )}
+      {pv && inv && (
+        <>
+          <Polarity x={(dcOutX + xInv) / 2 - 12} y={dcY + 14} sign="+" />
+          <Polarity x={(dcOutX + xInv) / 2 + 12} y={dcY + 14} sign="−" />
+        </>
+      )}
+
 
       {/* ── الإنفرتر ─────────────────────────────────────────────────────── */}
       {inv && (
