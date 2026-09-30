@@ -716,6 +716,16 @@ export function SldSvg({
               stroke={C.earth}
               strokeWidth={active === "earth" ? 3.4 : 2.4}
             />
+            {/* الترميز اللوني القياسي للتأريض: أخضر بخطوط صفراء متقطعة */}
+            <line
+              x1={xPv}
+              y1={earthY}
+              x2={xOut + wOut}
+              y2={earthY}
+              stroke="#f2c200"
+              strokeWidth={active === "earth" ? 3.4 : 2.4}
+              strokeDasharray="7 9"
+            />
             {bonds.map((x) => (
               <g key={x}>
                 <line x1={x} y1={earthY - 26} x2={x} y2={earthY} stroke={C.earth} strokeWidth={1.4} strokeDasharray="4 3" />
