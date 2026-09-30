@@ -7,6 +7,7 @@ import ProductVideoPlayer from "@/components/product-video";
 import { afterVideoNarration, getProductVideo, videoIntroNarration } from "@/lib/product-video";
 import { hasModelDatasheet, openInverterDatasheet, downloadInverterDatasheet } from "@/lib/inverter-datasheet-pdf";
 import { openDatasheetEn, downloadDatasheetEn } from "@/lib/datasheet-pdf-en";
+import { catalogCardTitleAr, catalogCardTitleEn } from "@/lib/catalog-card-title";
 
 
 // خدمة معلوماتية فقط — لا تحتوي أي زر بيع أو ربط بمسارات عروض الأسعار.
