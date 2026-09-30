@@ -1593,7 +1593,7 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
 
             {isQuoteActions ? (
               <div className="mt-6 border-t border-border pt-5">
-                <QuoteActions onPick={onPick} hideEngineering={step === "res_quote_ask"} />
+                <QuoteActions onPick={onPick} hideEngineering={String((session as Record<string, unknown>)["menu_choice"] ?? "") === "1"} />
               </div>
             ) : (visibleOptions.length > 0 || showEntry) && (
               <div className="mt-6 space-y-5 border-t border-border pt-5">
