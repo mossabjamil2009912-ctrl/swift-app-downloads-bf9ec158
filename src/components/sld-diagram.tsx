@@ -641,6 +641,14 @@ export default function SldDiagram({ params, number, actions }: Props) {
       </button>
       <button
         type="button"
+        onClick={() => setTheme((t) => (t === "paper" ? "blueprint" : "paper"))}
+        aria-label={theme === "paper" ? "نمط المخطط الأزرق" : "نمط الورق الأبيض"}
+        className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand"
+      >
+        <Palette className="size-4" />
+      </button>
+      <button
+        type="button"
         onClick={() => { setFull((v) => !v); setPan({ x: 0, y: 0 }); }}
         aria-label={full ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
         className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand"
@@ -650,15 +658,44 @@ export default function SldDiagram({ params, number, actions }: Props) {
     </div>
   );
 
+  const inspected = picked ? items[picked] : undefined;
+
+  const inspector = inspected && (
+    <div className="absolute inset-x-2 bottom-2 z-10 max-h-[52%] overflow-y-auto rounded-lg border border-border bg-card/95 p-3 shadow-lg backdrop-blur" dir="rtl">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-black text-skyline">{inspected.title}</p>
+          <p className="text-[10px] text-muted-foreground">{inspected.subtitle}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setPicked(null)}
+          aria-label="إغلاق بطاقة المكوّن"
+          className="grid size-7 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-brand hover:text-brand"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+      <div className="mt-2 grid gap-1 sm:grid-cols-2">
+        {inspected.rows.map(([label, value]) => (
+          <div key={label} className="flex items-center justify-between gap-2 rounded-md bg-muted/60 px-2.5 py-1">
+            <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
+            <span className="text-[10.5px] font-black" dir="ltr">{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const canvas = (
     <div
       ref={boxRef}
-      className={`relative overflow-hidden rounded-md border border-border bg-white touch-none ${full ? "h-[calc(100vh-6.5rem)]" : "h-[62vh] min-h-[320px]"}`}
+      className={`relative overflow-hidden rounded-md border border-border touch-none ${full ? "h-[calc(100vh-6.5rem)]" : "h-[62vh] min-h-[320px]"}`}
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
-      style={{ cursor: "grab" }}
+      style={{ cursor: "grab", background: theme === "paper" ? "#ffffff" : "#0b2545" }}
       dir="ltr"
     >
       <div
@@ -676,8 +713,9 @@ export default function SldDiagram({ params, number, actions }: Props) {
             : { transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "50% 50%" }
         }
       >
-        <SldSvg m={model} fit />
+        <SldSvg m={model} fit theme={theme} pick={setPicked} active={picked} calcs={calcs} />
       </div>
+      {inspector}
     </div>
   );
 
@@ -685,6 +723,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
   if (full) {
     return (
       <div className="fixed inset-0 z-[70] flex flex-col gap-2 bg-background p-3">
+
         <div className="flex items-center justify-between gap-2">
           <h3 className="truncate text-sm font-black">المخطط الكهربائي أحادي الخط (SLD)</h3>
           {controls}
