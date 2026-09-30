@@ -485,7 +485,7 @@ export function SldSvg({
         const bankX = xInv - 336;
         const bankW = 184;
         return (
-          <>
+          <g opacity={opBat}>
             <Block
               x={bankX}
               y={batY - 30}
