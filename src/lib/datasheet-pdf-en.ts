@@ -51,6 +51,7 @@ export function buildDatasheetHtmlEn(product: Product, autoPrint = false): strin
   const photo = abs(product.image);
   const today = new Date().toLocaleDateString("en-GB");
   const nameEn = translateProductName(product.name);
+  const powerEn = translateSpecValue(product.power);
 
   return `<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"/>
 <title>${esc(datasheetFileNameEn(product).replace(/\.pdf$/, ""))}</title>
@@ -99,7 +100,7 @@ export function buildDatasheetHtmlEn(product: Product, autoPrint = false): strin
       <div class="model">${esc(modelCode(product))}</div>
     </div>
   </div>
-  <div class="bar"><span>Technical Datasheet</span><span class="pw">${esc(product.power)}</span></div>
+  <div class="bar"><span>Technical Datasheet</span><span class="pw">${esc(powerEn)}</span></div>
 
   <div class="top">
     <div class="photo"><img src="${photo}" alt="${esc(nameEn)}"/></div>
@@ -107,7 +108,7 @@ export function buildDatasheetHtmlEn(product: Product, autoPrint = false): strin
       <h2>${esc(nameEn)}</h2>
       <table class="kv">
         <tr><th>Model</th><td>${esc(modelCode(product))}</td></tr>
-        <tr><th>Rated power</th><td>${esc(product.power)}</td></tr>
+        <tr><th>Rated power</th><td>${esc(powerEn)}</td></tr>
         <tr><th>Brand</th><td>${esc(product.brand)}</td></tr>
         <tr><th>Category</th><td>${esc(categoryLabelEn(product))}</td></tr>
         ${product.certificates ? `<tr><th>Certificates</th><td style="font-weight:600">${esc(translateSpecValue(product.certificates))}</td></tr>` : ""}
@@ -117,7 +118,7 @@ export function buildDatasheetHtmlEn(product: Product, autoPrint = false): strin
 
   <div style="margin-top:4mm">${specTablesEn(product)}</div>
 
-  <p class="note">All values above apply to model ${esc(modelCode(product))} rated ${esc(product.power)} only, as published in the manufacturer's official datasheet. This document is for technical and informational purposes only.</p>
+  <p class="note">All values above apply to model ${esc(modelCode(product))} rated ${esc(powerEn)} only, as published in the manufacturer's official datasheet. This document is for technical and informational purposes only.</p>
   <div class="ft">
     <span><b>ACTES Energy Systems &amp; Solutions</b> — Technical Support &amp; Engineering Consultancy</span>
     <span>${esc(today)}</span>

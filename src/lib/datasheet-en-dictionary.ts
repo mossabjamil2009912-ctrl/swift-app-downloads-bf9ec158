@@ -297,6 +297,8 @@ export const VALUE_PHRASES_EN: [string, string][] = [
   ["شاشة", "Display"],
   ["أو", "or"],
   ["السلامة", "Safety"],
+  ["و(", " and ("],
+  ["الموديل", "the model"],
   ["معايير مخطط لها وفق الكتالوج", "Standards listed in the catalogue"],
   ["يرجى التأكد من الفريق المحلي", "please confirm with the local team"],
   ["حسب الموديل", "depending on model"],
