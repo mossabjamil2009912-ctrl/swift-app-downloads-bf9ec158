@@ -59,8 +59,9 @@ export default function ProductsCatalog({ productId, onOpen, onBack, returnTo }:
 
 
 function BackButton({ onClick, label }: { onClick: () => void; label: string }) {
+  // الرجوع لا يعيد نطق الشاشة السابقة؛ يبقى الصوت صامتاً حتى يضغط المستخدم زر إعادة السماع.
   return (
-    <button type="button" onClick={onClick} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold text-navy shadow-sm transition hover:bg-muted lg:text-sm">
+    <button type="button" onClick={() => { silenceNextScreen(); onClick(); }} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold text-navy shadow-sm transition hover:bg-muted lg:text-sm">
       <ArrowRight className="size-4" /> {label}
     </button>
   );
