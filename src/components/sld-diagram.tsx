@@ -756,6 +756,8 @@ export default function SldDiagram({ params, number, actions }: Props) {
   const [theme, setTheme] = useState<SldTheme>("paper");
   const [picked, setPicked] = useState<string | null>(null);
   const [fitH, setFitH] = useState<number | null>(null);
+  const [flow, setFlow] = useState<SldFlow>("none");
+  const [saving, setSaving] = useState(false);
 
   const [rot, setRot] = useState<{ on: boolean; w: number; h: number }>({ on: false, w: 0, h: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
