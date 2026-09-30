@@ -297,6 +297,21 @@ export function SldSvg({
     return c && c.dropPct !== null ? ` — ${c.dropPct}%` : "";
   };
 
+  // سيناريوهات تدفق الطاقة: تُبرز المسار العامل وتُخفت المسار المعزول.
+  const opPv = flow === "night" ? 0.2 : 1;
+  const opGrid = flow === "outage" ? 0.16 : flow === "day" ? 0.5 : 1;
+  const opBat = flow === "day" ? 0.85 : 1;
+  const opEps = flow === "outage" || flow === "night" ? 1 : 0.9;
+  const wEps = flow === "outage" || flow === "night" ? 3.6 : 2;
+  const flowNote =
+    flow === "day"
+      ? "MODE: DAY — PV → LOADS + BATTERY CHARGE"
+      : flow === "night"
+        ? "MODE: NIGHT — BATTERY → CRITICAL LOADS"
+        : flow === "outage"
+          ? "MODE: GRID OUTAGE — ANTI-ISLANDING OPEN, EPS FEEDS CRITICAL LOADS"
+          : "";
+
   // نقطة مخرج الألواح / مدخل الإنفرتر بحسب وجود لوحة الـ DC
   const dcOutX = dc ? xDc + wDc : xPv + wPv;
   const dcY = busY;
