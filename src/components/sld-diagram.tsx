@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Download, Minus, Move, Network, Plus, RotateCcw } from "lucide-react";
+import { ArrowRight, Download, LineChart, Minus, Move, Network, Plus, RotateCcw, ShoppingCart } from "lucide-react";
 import { buildSld, type SldModel } from "@/lib/sld-engine";
 import { downloadSldSheet } from "@/lib/sld-pdf";
 import logoAsset from "@/assets/actes-logo-sld.png.asset.json";
@@ -23,7 +23,9 @@ const C = {
 
 const F = "'Segoe UI', 'Tahoma', sans-serif";
 
-type Props = { params: Record<string, unknown> | null; number?: string };
+type SldActions = { onBackToQuote: () => void; onBuy: () => void; onStudy?: (() => void) | undefined };
+type Props = { params: Record<string, unknown> | null; number?: string | undefined; actions?: SldActions | undefined };
+
 
 /** رمز لوح شمسي قياسي. */
 function PvSymbol({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
@@ -396,7 +398,7 @@ export function SldSvg({ m }: { m: SldModel }) {
 }
 
 /** شاشة المخطط الأحادي الرسمي داخل التطبيق مع تكبير وتحريك وتحميل. */
-export default function SldDiagram({ params, number }: Props) {
+export default function SldDiagram({ params, number, actions }: Props) {
   const model = useMemo(() => buildSld(params), [params]);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -533,14 +535,43 @@ export default function SldDiagram({ params, number }: Props) {
         </ul>
       )}
 
-      <button
-        type="button"
-        onClick={() => downloadSldSheet(model, number)}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-black text-brand-foreground shadow-md transition hover:opacity-90"
-      >
-        <Download className="size-4" />
-        تحميل المخطط الرسمي
-      </button>
+      {actions ? (
+        <div className="mt-5 grid gap-2 border-t border-border pt-4 sm:grid-cols-3">
+          <button
+            type="button"
+            onClick={actions.onBackToQuote}
+            className="flex items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-3 text-xs font-black text-navy transition hover:border-brand hover:text-brand"
+          >
+            <ArrowRight className="size-4" /> العودة إلى عرض السعر
+          </button>
+          <button
+            type="button"
+            onClick={actions.onBuy}
+            className="flex items-center justify-center gap-2 rounded-full bg-energy px-4 py-3 text-xs font-black text-energy-foreground transition hover:opacity-90"
+          >
+            <ShoppingCart className="size-4" /> متابعة الشراء
+          </button>
+          {actions.onStudy && (
+            <button
+              type="button"
+              onClick={actions.onStudy}
+              className="flex items-center justify-center gap-2 rounded-full bg-skyline px-4 py-3 text-xs font-black text-skyline-foreground transition hover:opacity-90"
+            >
+              <LineChart className="size-4" /> الانتقال لدراسة PVsyst
+            </button>
+          )}
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => downloadSldSheet(model, number)}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-black text-brand-foreground shadow-md transition hover:opacity-90"
+        >
+          <Download className="size-4" />
+          تحميل المخطط الرسمي
+        </button>
+      )}
+
     </section>
   );
 }

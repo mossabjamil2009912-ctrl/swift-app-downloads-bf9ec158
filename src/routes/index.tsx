@@ -1477,11 +1477,19 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
   const studyFresh = Boolean(view.study?.fresh);
   useEffect(() => { setShowStudyOnly(studyFresh); }, [studyFresh, view.study?.number]);
   const studyScreen = studyFresh && showStudyOnly && view.study;
+  // شاشة المخطط الكهربائي تُعرض وحدها كاملة عند طلبها
+  const [showSldOnly, setShowSldOnly] = useState(true);
+  const sldParams = view.sld?.params || null;
+  useEffect(() => { setShowSldOnly(true); }, [view.sld?.number, Boolean(sldParams)]);
+  const sldScreen = Boolean(sldParams) && showSldOnly && !studyScreen;
   const hasOutputs = Boolean(view.quote || view.study || view.sld || view.specs.length);
   // شاشة عرض السعر الرسمي: عنوان ثابت بدل نص المتابعة القادم من المحرك
-  const title = studyScreen
+  const title = sldScreen
+    ? "المخطط الكهربائي أحادي الخط (SLD)"
+    : studyScreen
     ? "دراسة المحاكاة الشمسية PVsyst"
     : view.quote ? "عرض سعر رسمي" : hasOutputs ? view.heading : STEP_LABELS[step] || view.heading;
+
   const visibleOptions = useMemo(() => view.options.filter((option) => !BACK_OPTION_TITLES.has(option.title.trim())), [view.options]);
   const isProjectSelection = step === "menu_sys3";
   // شاشة حلول الطاقة: بطاقتان عريضتان بدل زرين صغيرين
@@ -1492,7 +1500,7 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
   // مسار الدعم الفني: مؤشر مراحل خاص به بدل مراحل عرض السعر
   const isSupportPath = step.startsWith("sup_");
   // شاشة عرض السعر الرسمي: أربعة أزرار مباشرة بألوان مميزة لكل خدمة
-  const isQuoteActions = Boolean(view.quote) && (step === "qnext_ask" || step === "com_quote_ask" || step === "agr_quote_ask" || (studyFresh && !showStudyOnly));
+  const isQuoteActions = !sldScreen && Boolean(view.quote) && (step === "qnext_ask" || step === "com_quote_ask" || step === "agr_quote_ask" || (studyFresh && !showStudyOnly));
   // شاشة المخطط الكهربائي لا تطلب أي إدخال
   const showEntry = step !== "done" && !view.quote && !view.sld && !isProjectSelection && (step in ENTRY_PROMPTS || (view.needsInput && visibleOptions.length === 0));
 
@@ -1513,7 +1521,7 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
             <span className="mt-2 block h-1 w-10 rounded-full bg-brand" />
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <button type="button" onClick={() => { silenceNextScreen(); if (studyScreen) { setShowStudyOnly(false); return; } onBack(); }} title="رجوع خطوة" aria-label="رجوع خطوة" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-navy shadow-sm transition hover:bg-muted hover:border-brand hover:text-brand lg:text-sm">
+            <button type="button" onClick={() => { silenceNextScreen(); if (sldScreen) { setShowSldOnly(false); return; } if (studyScreen) { setShowStudyOnly(false); return; } onBack(); }} title="رجوع خطوة" aria-label="رجوع خطوة" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-navy shadow-sm transition hover:bg-muted hover:border-brand hover:text-brand lg:text-sm">
               <ArrowRight className="size-4" /> رجوع
             </button>
             {step === "done" && (
@@ -1530,7 +1538,17 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
 
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
 
-            {studyScreen ? (
+            {sldScreen ? (
+              <SldDiagram
+                params={sldParams}
+                number={view.sld?.number}
+                actions={{
+                  onBackToQuote: () => setShowSldOnly(false),
+                  onBuy: () => onPick("buy_invoice"),
+                  onStudy: view.study ? () => { setShowSldOnly(false); setShowStudyOnly(true); } : undefined,
+                }}
+              />
+            ) : studyScreen ? (
               <PvsystStudy
                 study={studyScreen}
                 actions={{
@@ -1540,6 +1558,7 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
                 }}
               />
             ) : (
+
               <>
             {view.images.length > 0 && !view.quote && !isProjectSelection && <MediaGallery images={view.images} />}
 
