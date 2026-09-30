@@ -212,7 +212,7 @@ export function SldSvg({ m }: { m: SldModel }) {
             x={xDc}
             y={pvTop}
             w={wDc}
-            h={pvH + 8}
+            h={Math.max(pvH + 8, 74)}
             title="DC PROTECTION BOARD"
             lines={[`${dc.ways} Way`, `Fuse ${dc.fuseA} A / 1000 V DC`, "DC Isolator", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
             accent={C.dc}
@@ -220,7 +220,7 @@ export function SldSvg({ m }: { m: SldModel }) {
           {Array.from({ length: drawnStrings }).map((_, i) => (
             <FuseSymbol key={i} x={xDc + wDc - 20} y={pvTop + i * rowH + 19} />
           ))}
-          <SpdSymbol x={xDc + 22} y={pvTop + pvH - 8} />
+          <SpdSymbol x={xDc + 22} y={pvTop + Math.max(pvH + 8, 74) + 12} />
           <line x1={xDc + wDc} y1={dcY} x2={xInv} y2={dcY} stroke={C.dc} strokeWidth={2} />
         </>
       )}
