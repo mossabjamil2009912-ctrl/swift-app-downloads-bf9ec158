@@ -1538,7 +1538,17 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
 
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
 
-            {studyScreen ? (
+            {sldScreen ? (
+              <SldDiagram
+                params={sldParams}
+                number={view.sld?.number}
+                actions={{
+                  onBackToQuote: () => setShowSldOnly(false),
+                  onBuy: () => onPick("buy_invoice"),
+                  onStudy: view.study ? () => { setShowSldOnly(false); setShowStudyOnly(true); } : undefined,
+                }}
+              />
+            ) : studyScreen ? (
               <PvsystStudy
                 study={studyScreen}
                 actions={{
@@ -1548,6 +1558,7 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
                 }}
               />
             ) : (
+
               <>
             {view.images.length > 0 && !view.quote && !isProjectSelection && <MediaGallery images={view.images} />}
 
