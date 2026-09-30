@@ -558,6 +558,7 @@ export function SldSvg({
 
           <BreakerSymbol x={xAc + wAc - 24} y={dcY} />
           <SpdSymbol x={xAc + 22} y={dcY + 26} />
+          <RcdSymbol x={xAc + wAc - 24} y={dcY - 34} color={C.ac} />
         </>
       )}
 
