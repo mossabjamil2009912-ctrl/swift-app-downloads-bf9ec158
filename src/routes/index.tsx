@@ -4,7 +4,7 @@ import actesLogo from "@/assets/actes-logo-full.webp";
 import actesLogoWhite from "@/assets/actes-logo-white.webp";
 import { useLang, type Lang } from "@/lib/i18n";
 import { SoundToggle } from "@/lib/click-sound";
-import { prepareSpeech, prepareWelcome, quoteSpeech, replaySpeech, respeakScreen, speakScreen, speakWelcome, studySpeech, stopSpeaking, unlockVoice, viewSpeech } from "@/lib/voice-guide";
+import { prepareSpeech, prepareWelcome, quoteSpeech, replaySpeech, respeakScreen, setScreenSpeechSilently, silenceNextScreen, speakScreen, speakWelcome, studySpeech, stopSpeaking, unlockVoice, viewSpeech } from "@/lib/voice-guide";
 import { startVoiceWarmup } from "@/lib/voice-warmup";
 import { preloadAppImages } from "@/lib/preload-images";
 import PvsystStudy from "@/components/pvsyst-study";
@@ -426,7 +426,8 @@ function ActesApp() {
         setDraft("");
         chosenRef.current = "";
         const isResidential = String(sessionRef.current["menu_choice"] ?? "") === "1";
-        void respeakScreen(previous.view
+        // الرجوع صامت: نسجّل نص الشاشة فقط، وزر إعادة السماع في رأس الشاشة ينطقه عند الطلب.
+        setScreenSpeechSilently(`back|${previous.step}`, previous.view
           ? (previous.view.study?.fresh
             ? studySpeech(previous.view.study)
             : previous.view.quote
@@ -1508,7 +1509,7 @@ function QuoteWorkspace({ view, session, step, draft, setDraft, onPick, onBack, 
             <span className="mt-2 block h-1 w-10 rounded-full bg-brand" />
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <button type="button" onClick={() => { if (studyScreen) { setShowStudyOnly(false); return; } onBack(); }} title="رجوع خطوة" aria-label="رجوع خطوة" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-navy shadow-sm transition hover:bg-muted hover:border-brand hover:text-brand lg:text-sm">
+            <button type="button" onClick={() => { silenceNextScreen(); if (studyScreen) { setShowStudyOnly(false); return; } onBack(); }} title="رجوع خطوة" aria-label="رجوع خطوة" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-navy shadow-sm transition hover:bg-muted hover:border-brand hover:text-brand lg:text-sm">
               <ArrowRight className="size-4" /> رجوع
             </button>
             {step === "done" && (

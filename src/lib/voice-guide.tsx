@@ -313,11 +313,30 @@ export async function speakAfterCurrent(arabic: string): Promise<boolean> {
 let welcomeDone = false;
 let lastScreen = "";
 
+// الرجوع للخلف لا يعيد نطق الشاشة: نكتفي بتسجيل نصها ليعمل زر «إعادة السماع» عند طلب المستخدم.
+let silentNext = false;
+
+/** يمنع النطق التلقائي للشاشة القادمة (يُستدعى عند الضغط على أي زر رجوع). */
+export function silenceNextScreen() {
+  silentNext = true;
+  stopSpeaking();
+}
+
+/** يسجّل نص الشاشة بلا نطق: زر «إعادة السماع» يبقى جاهزاً لنطقه فوراً. */
+export function setScreenSpeechSilently(key: string, text: string) {
+  if (!text) return;
+  stopSpeaking();
+  setScreenSpeech(text);
+  lastScreen = key;
+  silentNext = false;
+}
+
 /** ينطق رسالة الشاشة فور ظهورها؛ التنقل السريع يلغي النطق بصمت. */
 export function speakScreen(key: string, text: string) {
   if (!text) return;
   // نسجّل نص الشاشة أولاً حتى يعمل زر «إعادة السماع» على الشاشة المعروضة دائماً.
   setScreenSpeech(text);
+  if (silentNext) { silentNext = false; stopSpeaking(); lastScreen = key; pendingKey = ""; return; }
   if (key === lastScreen) return;
   stopSpeaking();
   lastScreen = key;
@@ -336,6 +355,7 @@ export function speakScreen(key: string, text: string) {
 export function speakScreenAfterCurrent(key: string, text: string) {
   if (!text) return;
   setScreenSpeech(text);
+  if (silentNext) { silentNext = false; stopSpeaking(); lastScreen = key; return; }
   if (key === lastScreen) return;
   lastScreen = key;
   const expected = token;
