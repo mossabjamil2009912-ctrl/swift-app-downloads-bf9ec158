@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Download, Minus, Move, Network, Plus, RotateCcw } from "lucide-react";
+import { ArrowRight, Download, LineChart, Minus, Move, Network, Plus, RotateCcw, ShoppingCart } from "lucide-react";
 import { buildSld, type SldModel } from "@/lib/sld-engine";
 import { downloadSldSheet } from "@/lib/sld-pdf";
 import logoAsset from "@/assets/actes-logo-sld.png.asset.json";
