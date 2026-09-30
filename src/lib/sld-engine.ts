@@ -346,6 +346,8 @@ export function buildSld(raw: Record<string, unknown> | null): SldModel | null {
   if (model.meter) notes.push(`Smart meter / ${model.meter.ct} installed at the utility connection point and wired to the inverter for export control and load monitoring.`);
   if (model.bms) notes.push("Inverter EPS / backup output feeds the critical loads panel only; grid port supplies non-critical loads (anti-islanding on grid failure).");
   if (model.acBox) notes.push(`AC main breaker ${model.acBox.breakerA} A ${phase3 ? "4P" : "2P"} with surge protection device.`);
+  if (model.acBox) notes.push(`RCD Type B 30 mA ${phase3 ? "4P" : "2P"} required on the inverter AC side per IEC 60364-7-712 (DC residual current immunity).`);
+  if (model.dcBox) notes.push("Lockable DC load break isolator installed beside the inverter DC input for safe maintenance; DC board rated IP65 UV resistant, AC board IP54.");
   if (!model.grid) notes.push("Stand-alone system — no utility grid connection.");
   if (model.earth) notes.push("All metallic frames, boards and inverter bodies bonded to the earthing pit.");
   model.notes = notes;

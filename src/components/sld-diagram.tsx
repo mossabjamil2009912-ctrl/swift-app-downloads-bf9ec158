@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Download, Expand, LineChart, Minus, Move, Network, Palette, Plus, RotateCcw, Shrink, ShoppingCart, X } from "lucide-react";
+import { ArrowRight, Download, Expand, ImageDown, LineChart, Minus, Move, Network, Palette, Plus, RotateCcw, Shrink, ShoppingCart, X } from "lucide-react";
 import { buildSld, type SldModel } from "@/lib/sld-engine";
 import { cableCalcs, inspectorItems, type CableCalc } from "@/lib/sld-annotations";
 import { downloadSldSheet } from "@/lib/sld-pdf";
@@ -219,9 +219,37 @@ function WireTag({ x, y, text: label, color }: { x: number; y: number; text: str
   );
 }
 
+/** رمز مفتاح عزل ميكانيكي (DC Rotary Isolator) للفصل اليدوي أثناء الصيانة. */
+function IsolatorSymbol({ x, y, color }: { x: number; y: number; color: string }) {
+  return (
+    <g>
+      <line x1={x} y1={y - 13} x2={x} y2={y - 6} stroke={color} strokeWidth={1.4} />
+      <line x1={x} y1={y - 6} x2={x + 10} y2={y + 7} stroke={color} strokeWidth={1.6} />
+      <line x1={x} y1={y + 7} x2={x} y2={y + 14} stroke={color} strokeWidth={1.4} />
+      <circle cx={x} cy={y - 6} r={1.8} fill={color} />
+      <circle cx={x} cy={y + 7} r={1.8} fill={color} />
+      <text x={x + 13} y={y + 2} fontFamily={F} fontSize={6.6} fontWeight={700} fill={color}>ISO</text>
+    </g>
+  );
+}
+
+/** رمز قاطع تسريب أرضي من النوع B (RCD Type B) الإلزامي للإنفرترات. */
+function RcdSymbol({ x, y, color }: { x: number; y: number; color: string }) {
+  return (
+    <g>
+      <rect x={x - 9} y={y - 10} width={18} height={20} fill={C.fill} stroke={color} strokeWidth={1.3} />
+      <circle cx={x} cy={y - 2} r={4.6} fill="none" stroke={color} strokeWidth={1.2} />
+      <line x1={x - 6} y1={y + 6} x2={x + 6} y2={y + 6} stroke={color} strokeWidth={1.2} />
+      <text x={x} y={y + 18} textAnchor="middle" fontFamily={F} fontSize={6.4} fontWeight={700} fill={color}>RCD-B</text>
+    </g>
+  );
+}
+
+export type SldFlow = "none" | "day" | "night" | "outage";
+
 /** يرسم المخطط الأحادي الكامل داخل عنصر SVG واحد. */
 export function SldSvg({
-  m, fit = false, theme = "paper", pick, active, calcs,
+  m, fit = false, theme = "paper", pick, active, calcs, flow = "none",
 }: {
   m: SldModel;
   fit?: boolean;
@@ -229,6 +257,7 @@ export function SldSvg({
   pick?: ((id: string) => void) | undefined;
   active?: string | null | undefined;
   calcs?: CableCalc[] | undefined;
+  flow?: SldFlow;
 }) {
   const W = 1240;
   const drawnStrings = Math.min(m.pv?.strings || 1, 4);
@@ -268,6 +297,21 @@ export function SldSvg({
     return c && c.dropPct !== null ? ` — ${c.dropPct}%` : "";
   };
 
+  // سيناريوهات تدفق الطاقة: تُبرز المسار العامل وتُخفت المسار المعزول.
+  const opPv = flow === "night" ? 0.2 : 1;
+  const opGrid = flow === "outage" ? 0.16 : flow === "day" ? 0.5 : 1;
+  const opBat = flow === "day" ? 0.85 : 1;
+  const opEps = flow === "outage" || flow === "night" ? 1 : 0.9;
+  const wEps = flow === "outage" || flow === "night" ? 3.6 : 2;
+  const flowNote =
+    flow === "day"
+      ? "MODE: DAY — PV → LOADS + BATTERY CHARGE"
+      : flow === "night"
+        ? "MODE: NIGHT — BATTERY → CRITICAL LOADS"
+        : flow === "outage"
+          ? "MODE: GRID OUTAGE — ANTI-ISLANDING OPEN, EPS FEEDS CRITICAL LOADS"
+          : "";
+
   // نقطة مخرج الألواح / مدخل الإنفرتر بحسب وجود لوحة الـ DC
   const dcOutX = dc ? xDc + wDc : xPv + wPv;
   const dcY = busY;
@@ -287,10 +331,20 @@ export function SldSvg({
         </marker>
       </defs>
 
+      {flowNote && (
+        <g>
+          <rect x={W - 470} y={8} width={462} height={20} fill={C.band} stroke={C.frame} strokeWidth={1} />
+          <text x={W - 239} y={22} textAnchor="middle" fontFamily={F} fontSize={9} fontWeight={700} fill={C.ink}>
+            {flowNote}
+          </text>
+        </g>
+      )}
+
 
       {/* ── جانب التيار المستمر: سلاسل الألواح ───────────────────────────── */}
       {pv && (
         <g
+          opacity={opPv}
           style={pick ? { cursor: "pointer" } : undefined}
           onClick={pick ? () => pick("pv") : undefined}
         >
@@ -338,7 +392,7 @@ export function SldSvg({
             w={wDc}
             h={Math.max(pvH + 8, 74)}
             title="DC PROTECTION BOARD"
-            lines={[`${dc.ways} Way`, `Fuse gPV ${dc.fuseA} A / 1000 V DC`, "DC Isolator", "Icu 10 kA", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
+            lines={[`${dc.ways} Way — IP65 UV`, `Fuse gPV ${dc.fuseA} A / 1000 V DC`, "DC Isolator (load break)", "Icu 10 kA", dc.hasSpd ? "DC SPD Type 2" : ""].filter(Boolean)}
             accent={C.dc}
             id="dc"
             pick={pick}
@@ -348,6 +402,7 @@ export function SldSvg({
             <FuseSymbol key={i} x={xDc + wDc - 20} y={pvTop + i * rowH + 19} />
           ))}
           <SpdSymbol x={xDc + 22} y={pvTop + Math.max(pvH + 8, 74) + 12} />
+          <IsolatorSymbol x={xDc + wDc + 22} y={dcY - 34} color={C.dc} />
           {(() => {
             const n = Math.min(Math.max(inv?.mppt || 1, 1), 3);
             return Array.from({ length: n }).map((_, i) => {
@@ -430,7 +485,7 @@ export function SldSvg({
         const bankX = xInv - 336;
         const bankW = 184;
         return (
-          <>
+          <g opacity={opBat}>
             <Block
               x={bankX}
               y={batY - 30}
@@ -471,7 +526,7 @@ export function SldSvg({
             <Node x={riser} y={invY + invH} color={C.dc} />
             <WireTag x={riser + 26} y={batY - 8} text={`${m.cables.find((c) => /BAT/.test(c.route))?.tag || "W3"}${drop("W3")}`} color={C.dc} />
             <text x={riser + 6} y={invY + invH + 26} fontFamily={F} fontSize={7.6} fill={C.dc}>BAT</text>
-          </>
+          </g>
         );
       })()}
 
@@ -489,9 +544,10 @@ export function SldSvg({
             h={invH + 12}
             title="AC PROTECTION BOARD"
             lines={[
-              `Main ${ac.breakerA} A ${ac.phase3 ? "4P" : "2P"}`,
+              `Main ${ac.breakerA} A ${ac.phase3 ? "4P" : "2P"} — IP54`,
               ac.phase3 ? "L1 / L2 / L3 / N / PE" : "L / N / PE",
               `Icu ${ac.phase3 || ac.breakerA > 63 ? 15 : 6} kA`,
+              `RCD Type B 30 mA ${ac.phase3 ? "4P" : "2P"}`,
               "AC SPD Type 2",
             ]}
             accent={C.ac}
@@ -502,6 +558,7 @@ export function SldSvg({
 
           <BreakerSymbol x={xAc + wAc - 24} y={dcY} />
           <SpdSymbol x={xAc + 22} y={dcY + 26} />
+          <RcdSymbol x={xAc + wAc - 24} y={dcY - 34} color={C.ac} />
         </>
       )}
 
@@ -534,7 +591,7 @@ export function SldSvg({
         return (
           <>
             {m.grid && (
-              <>
+              <g opacity={opGrid}>
                 <Block
                   x={xOut}
                   y={dcY - 76}
@@ -564,7 +621,12 @@ export function SldSvg({
                     </text>
                   </g>
                 )}
-              </>
+                {flow === "outage" && (
+                  <text x={(from + xOut) / 2 - 56} y={dcY + 16} textAnchor="middle" fontFamily={F} fontSize={7.6} fontWeight={700} fill={C.dc}>
+                    GRID OPEN — ANTI-ISLANDING
+                  </text>
+                )}
+              </g>
             )}
             <Block
               x={xOut}
@@ -579,14 +641,14 @@ export function SldSvg({
               active={active === (backup ? "backup" : "loads")}
             />
             {backup ? (
-              <>
-                <line x1={xInv + wInv} y1={dcY + 30} x2={xInv + wInv + 18} y2={dcY + 30} stroke={C.ac} strokeWidth={2} />
-                <line x1={xInv + wInv + 18} y1={dcY + 30} x2={xInv + wInv + 18} y2={loadY} stroke={C.ac} strokeWidth={2} />
-                <line x1={xInv + wInv + 18} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={2} markerEnd="url(#sld-arrow)" />
+              <g opacity={opEps}>
+                <line x1={xInv + wInv} y1={dcY + 30} x2={xInv + wInv + 18} y2={dcY + 30} stroke={C.ac} strokeWidth={wEps} />
+                <line x1={xInv + wInv + 18} y1={dcY + 30} x2={xInv + wInv + 18} y2={loadY} stroke={C.ac} strokeWidth={wEps} />
+                <line x1={xInv + wInv + 18} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={wEps} markerEnd="url(#sld-arrow)" />
                 <Node x={xInv + wInv} y={dcY + 30} color={C.ac} />
                 <PhaseMark x={(xInv + wInv + xOut) / 2 + 40} y={loadY} phase3={phase3} />
                 <WireTag x={(xInv + wInv + xOut) / 2 - 40} y={loadY - 6} text={`W6 — EPS BACKUP${drop("W6")}`} color={C.ac} />
-              </>
+              </g>
             ) : (
               <>
                 <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
@@ -654,6 +716,16 @@ export function SldSvg({
               stroke={C.earth}
               strokeWidth={active === "earth" ? 3.4 : 2.4}
             />
+            {/* الترميز اللوني القياسي للتأريض: أخضر بخطوط صفراء متقطعة */}
+            <line
+              x1={xPv}
+              y1={earthY}
+              x2={xOut + wOut}
+              y2={earthY}
+              stroke="#f2c200"
+              strokeWidth={active === "earth" ? 3.4 : 2.4}
+              strokeDasharray="7 9"
+            />
             {bonds.map((x) => (
               <g key={x}>
                 <line x1={x} y1={earthY - 26} x2={x} y2={earthY} stroke={C.earth} strokeWidth={1.4} strokeDasharray="4 3" />
@@ -684,6 +756,8 @@ export default function SldDiagram({ params, number, actions }: Props) {
   const [theme, setTheme] = useState<SldTheme>("paper");
   const [picked, setPicked] = useState<string | null>(null);
   const [fitH, setFitH] = useState<number | null>(null);
+  const [flow, setFlow] = useState<SldFlow>("none");
+  const [saving, setSaving] = useState(false);
 
   const [rot, setRot] = useState<{ on: boolean; w: number; h: number }>({ on: false, w: 0, h: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
@@ -740,6 +814,78 @@ export default function SldDiagram({ params, number, actions }: Props) {
   };
   const onUp = () => { drag.current = null; };
 
+  /**
+   * يحفظ المخطط صورة عالية الدقة (×3) جاهزة للطباعة والمشاركة الميدانية،
+   * برسم نسخة من الـ SVG على لوحة نقطية مع خلفية النمط الحالي.
+   */
+  const saveImage = () => {
+    const src = boxRef.current?.querySelector("svg");
+    if (!src) return;
+    setSaving(true);
+    const bgColor = theme === "paper" ? "#ffffff" : "#0b2545";
+    const clone = src.cloneNode(true) as SVGSVGElement;
+    const vb = (clone.getAttribute("viewBox") || "0 0 1240 520").split(/\s+/).map(Number);
+    const vw = vb[2] || 1240;
+    const vh = vb[3] || 520;
+    clone.setAttribute("width", String(vw));
+    clone.setAttribute("height", String(vh));
+    clone.removeAttribute("preserveAspectRatio");
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", "0");
+    rect.setAttribute("y", "0");
+    rect.setAttribute("width", String(vw));
+    rect.setAttribute("height", String(vh));
+    rect.setAttribute("fill", bgColor);
+    clone.insertBefore(rect, clone.firstChild);
+    const xml = new XMLSerializer().serializeToString(clone);
+    const img = new Image();
+    const scale = 3;
+    const done = () => setSaving(false);
+    img.onload = () => {
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(vw * scale);
+      cv.height = Math.round(vh * scale);
+      const ctx = cv.getContext("2d");
+      if (!ctx) return done();
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      const a = document.createElement("a");
+      a.href = cv.toDataURL("image/png");
+      a.download = `ACTES-SLD-${number || model.title.ref || "diagram"}.png`;
+      a.click();
+      done();
+    };
+    img.onerror = done;
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`;
+  };
+
+  const FLOWS: { id: SldFlow; label: string }[] = [
+    { id: "none", label: "المخطط الأساسي" },
+    { id: "day", label: "وضع النهار" },
+    { id: "night", label: "وضع الليل" },
+    { id: "outage", label: "انقطاع الشبكة" },
+  ];
+
+  const flowBar = (
+    <div className="flex flex-wrap items-center gap-1.5" dir="rtl">
+      {FLOWS.map((f) => (
+        <button
+          key={f.id}
+          type="button"
+          onClick={() => setFlow(f.id)}
+          className={`rounded-full border px-3 py-1.5 text-[10.5px] font-black transition ${
+            flow === f.id
+              ? "border-brand bg-brand text-brand-foreground"
+              : "border-border bg-card text-skyline hover:border-brand hover:text-brand"
+          }`}
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
+  );
+
   const controls = (
     <div className="flex items-center gap-1.5">
       <button type="button" onClick={() => setZoom((z) => Math.min(8, +(z + 0.5).toFixed(2)))} aria-label="تكبير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
@@ -758,6 +904,15 @@ export default function SldDiagram({ params, number, actions }: Props) {
         className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand"
       >
         <Palette className="size-4" />
+      </button>
+      <button
+        type="button"
+        onClick={saveImage}
+        disabled={saving}
+        aria-label="حفظ المخطط صورة عالية الدقة"
+        className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand disabled:opacity-50"
+      >
+        <ImageDown className="size-4" />
       </button>
       <button
         type="button"
@@ -826,7 +981,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
             : { transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "50% 50%" }
         }
       >
-        <SldSvg m={model} fit theme={theme} pick={setPicked} active={picked} calcs={calcs} />
+        <SldSvg m={model} fit theme={theme} pick={setPicked} active={picked} calcs={calcs} flow={flow} />
       </div>
       {inspector}
     </div>
@@ -841,6 +996,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
           <h3 className="truncate text-sm font-black">المخطط الكهربائي أحادي الخط (SLD)</h3>
           {controls}
         </div>
+        {flowBar}
         {canvas}
       </div>
     );
@@ -864,9 +1020,10 @@ export default function SldDiagram({ params, number, actions }: Props) {
         {controls}
       </div>
 
-      <div className="mt-3">{canvas}</div>
+      <div className="mt-3">{flowBar}</div>
+      <div className="mt-2">{canvas}</div>
       <p className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، واضغط أي مكوّن لعرض مواصفاته الفنية.
+        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، واضغط أي مكوّن لعرض مواصفاته الفنية، وزر الصورة لحفظ المخطط بدقة عالية.
       </p>
 
 
