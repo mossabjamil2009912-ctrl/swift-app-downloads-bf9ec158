@@ -157,13 +157,18 @@ function EarthSymbol({ x, y }: { x: number; y: number }) {
   );
 }
 
-/** صندوق مكوّن هندسي بعنوان وأسطر مواصفات. */
+/** صندوق مكوّن هندسي بعنوان وأسطر مواصفات، قابل للنقر لإظهار بطاقة فحصه. */
 function Block({
-  x, y, w, h, title, lines, accent,
-}: { x: number; y: number; w: number; h: number; title: string; lines: string[]; accent: string }) {
+  x, y, w, h, title, lines, accent, pick, active,
+}: {
+  x: number; y: number; w: number; h: number; title: string; lines: string[]; accent: string;
+  pick?: ((id: string) => void) | undefined; id?: string | undefined; active?: boolean | undefined;
+}) {
+  const id = arguments.length ? undefined : undefined;
+  void id;
   return (
-    <g>
-      <rect x={x} y={y} width={w} height={h} fill={C.fill} stroke={C.frame} strokeWidth={1.6} />
+    <g style={pick ? { cursor: "pointer" } : undefined}>
+      <rect x={x} y={y} width={w} height={h} fill={C.fill} stroke={active ? accent : C.frame} strokeWidth={active ? 2.6 : 1.6} />
       <rect x={x} y={y} width={w} height={16} fill={C.band} stroke={C.frame} strokeWidth={1.2} />
       <rect x={x} y={y} width={3} height={h} fill={accent} />
       <text x={x + w / 2} y={y + 12} textAnchor="middle" fontFamily={F} fontSize={9.5} fontWeight={700} fill={C.ink}>
@@ -177,6 +182,7 @@ function Block({
     </g>
   );
 }
+
 
 /** نص تسمية كابل على المسار. */
 function WireTag({ x, y, text: label, color }: { x: number; y: number; text: string; color: string }) {
