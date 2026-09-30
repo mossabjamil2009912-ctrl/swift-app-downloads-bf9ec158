@@ -148,18 +148,26 @@ export function buildSld(raw: Record<string, unknown> | null): SldModel | null {
   const batKwh = num(p.bat?.kwh);
   const sysMode = String(p.sysMode || "");
 
-  // ── الأصناف الموجودة فعلاً ──────────────────────────────────────────────
-  const panelItem = hasItems ? findItem(items, (k) => k.startsWith("panel:")) : nPan ? { qty: nPan } : null;
-  const invItem = hasItems ? findItem(items, (k) => k.startsWith("inverter:")) : invKw ? { qty: nInv } : null;
-  const batItem = hasItems ? findItem(items, (k) => k.startsWith("battery:") || k.startsWith("ess:")) : nBat ? { qty: nBat } : null;
-  const dcItem = hasItems ? findItem(items, (k) => k.startsWith("dc:")) : nStr ? { key: `dc:${nStr}`, name: `لوحة حماية DC ${nStr} خط` } : null;
+  // ── الأصناف الموجودة فعلاً (فحص المفتاح أو الاسم أو المعاملات المباشرة) ───
+  const panelItem = hasItems
+    ? findItem(items, (k, n) => k.startsWith("panel:") || /لوح|ألواح|panel|module|suntech/i.test(n)) || (nPan ? { qty: nPan } : null)
+    : nPan ? { qty: nPan } : null;
+  const invItem = hasItems
+    ? findItem(items, (k, n) => k.startsWith("inverter:") || /انفرتر|إنفرتر|inverter|deye|solis|هايبرد|باور/i.test(n)) || (invKw ? { qty: nInv } : null)
+    : invKw ? { qty: nInv } : null;
+  const batItem = hasItems
+    ? findItem(items, (k, n) => k.startsWith("battery:") || k.startsWith("ess:") || /بطارية|بطاريه|battery|pylontech|hthium|uf5000/i.test(n)) || (nBat ? { qty: nBat } : null)
+    : nBat ? { qty: nBat } : null;
+  const dcItem = hasItems
+    ? findItem(items, (k, n) => k.startsWith("dc:") || /حماية dc|قواطع dc|dc combiner/i.test(n)) || (nStr ? { key: `dc:${nStr}`, name: `لوحة حماية DC ${nStr} خط` } : null)
+    : nStr ? { key: `dc:${nStr}`, name: `لوحة حماية DC ${nStr} خط` } : null;
   const acItem = hasItems
-    ? findItem(items, (k) => k.startsWith("ac:") && !k.startsWith("ac:3-175"))
+    ? findItem(items, (k, n) => (k.startsWith("ac:") && !k.startsWith("ac:3-175")) || /حماية ac|قواطع ac|توزيع ac/i.test(n)) || { key: phase3 ? "ac:3" : "ac:1", name: `لوحة حماية AC ${phase3 ? "ثري فاز" : "سنجل فاز"}` }
     : { key: phase3 ? "ac:3" : "ac:1", name: `لوحة حماية AC ${phase3 ? "ثري فاز" : "سنجل فاز"}` };
-  const batBoxItem = findItem(items, (k) => k.startsWith("bat:box"));
-  const atsItem = findItem(items, (k) => k.startsWith("ac:3-175"));
-  const earthItem = findItem(items, (k) => k.startsWith("earth:"));
-  const bmsItem = findItem(items, (k) => k.startsWith("bms:"));
+  const batBoxItem = findItem(items, (k, n) => k.startsWith("bat:box") || /صندوق بطاريات|لوحة حماية بطارية|قاطع بطارية/i.test(n));
+  const atsItem = findItem(items, (k, n) => k.startsWith("ac:3-175") || /\bats\b|changeover|قلاب/i.test(n));
+  const earthItem = findItem(items, (k, n) => k.startsWith("earth:") || /تأريض|earth/i.test(n));
+  const bmsItem = findItem(items, (k, n) => k.startsWith("bms:") || /bms|وحدة تحكم/i.test(n));
 
   const pv = panelItem
     ? {
