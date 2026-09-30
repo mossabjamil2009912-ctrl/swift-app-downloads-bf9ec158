@@ -272,10 +272,16 @@ export function SldSvg({
 
       {/* ── جانب التيار المستمر: سلاسل الألواح ───────────────────────────── */}
       {pv && (
-        <>
+        <g
+          style={pick ? { cursor: "pointer" } : undefined}
+          onClick={pick ? () => pick("pv") : undefined}
+        >
           <text x={xPv} y={pvTop - 14} fontFamily={F} fontSize={10} fontWeight={700} fill={C.dc}>
             DC SIDE — PV ARRAY {pv.kwp ? `${pv.kwp.toFixed(2)} kWp` : ""}
           </text>
+          {active === "pv" && (
+            <rect x={xPv - 8} y={pvTop - 8} width={wPv + 14} height={pvH + 40} fill="none" stroke={C.dc} strokeWidth={2.4} strokeDasharray="6 4" />
+          )}
           {Array.from({ length: drawnStrings }).map((_, i) => {
             const y = pvTop + i * rowH + 8;
             return (
@@ -287,6 +293,9 @@ export function SldSvg({
                   {`String ${i + 1} — ${pv.perString} × ${pv.wp} Wp`}
                 </text>
                 <line x1={xPv + 90} y1={y + 11} x2={dc ? xDc : xInv} y2={y + 11} stroke={C.dc} strokeWidth={1.5} />
+                <Polarity x={xPv + 100} y={y + 8} sign="+" />
+                <Polarity x={xPv + 114} y={y + 8} sign="−" />
+                <Node x={dc ? xDc : xInv} y={y + 11} color={C.dc} />
                 {pv.strings > drawnStrings && i === drawnStrings - 1 && (
                   <text x={xPv} y={y + 34} fontFamily={F} fontSize={8.4} fontStyle="italic" fill={C.soft}>
                     {`typical — total ${pv.strings} strings × ${pv.perString} modules (${pv.qty} modules)`}
@@ -298,8 +307,9 @@ export function SldSvg({
           <text x={xPv} y={pvTop + pvH + 24} fontFamily={F} fontSize={8.4} fill={C.soft}>
             {`${pv.model}${pv.strVoc ? ` — Voc/string ${Math.round(pv.strVoc)} V` : ""}${pv.strVmp ? ` / Vmp ${Math.round(pv.strVmp)} V` : ""}`}
           </text>
-        </>
+        </g>
       )}
+
 
       {/* ── لوحة حماية الـ DC (فقط إذا كانت ضمن الأصناف) ──────────────────── */}
       {dc && (
