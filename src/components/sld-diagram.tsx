@@ -504,7 +504,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
 
   if (full) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col gap-2 bg-background p-3">
+      <div className="fixed inset-0 z-[70] flex flex-col gap-2 bg-background p-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="truncate text-sm font-black">المخطط الكهربائي أحادي الخط (SLD)</h3>
           {controls}
