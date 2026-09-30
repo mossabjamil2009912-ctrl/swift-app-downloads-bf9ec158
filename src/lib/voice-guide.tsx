@@ -355,6 +355,7 @@ export function speakScreen(key: string, text: string) {
 export function speakScreenAfterCurrent(key: string, text: string) {
   if (!text) return;
   setScreenSpeech(text);
+  if (silentNext) { silentNext = false; stopSpeaking(); lastScreen = key; return; }
   if (key === lastScreen) return;
   lastScreen = key;
   const expected = token;
