@@ -331,6 +331,15 @@ export function SldSvg({
         </marker>
       </defs>
 
+      {flowNote && (
+        <g>
+          <rect x={W - 470} y={8} width={462} height={20} fill={C.band} stroke={C.frame} strokeWidth={1} />
+          <text x={W - 239} y={22} textAnchor="middle" fontFamily={F} fontSize={9} fontWeight={700} fill={C.ink}>
+            {flowNote}
+          </text>
+        </g>
+      )}
+
 
       {/* ── جانب التيار المستمر: سلاسل الألواح ───────────────────────────── */}
       {pv && (
