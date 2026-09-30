@@ -402,6 +402,7 @@ export function SldSvg({
             <FuseSymbol key={i} x={xDc + wDc - 20} y={pvTop + i * rowH + 19} />
           ))}
           <SpdSymbol x={xDc + 22} y={pvTop + Math.max(pvH + 8, 74) + 12} />
+          <IsolatorSymbol x={xDc + wDc + 22} y={dcY - 34} color={C.dc} />
           {(() => {
             const n = Math.min(Math.max(inv?.mppt || 1, 1), 3);
             return Array.from({ length: n }).map((_, i) => {
