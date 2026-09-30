@@ -6,6 +6,7 @@ import { isVoiceOn, isVoicePlatform, speakScreen, speakScreenAfterCurrent, stopS
 import ProductVideoPlayer from "@/components/product-video";
 import { getProductVideo, videoIntroNarration } from "@/lib/product-video";
 import { hasModelDatasheet, openInverterDatasheet, downloadInverterDatasheet } from "@/lib/inverter-datasheet-pdf";
+import { openDatasheetEn, downloadDatasheetEn } from "@/lib/datasheet-pdf-en";
 
 
 // خدمة معلوماتية فقط — لا تحتوي أي زر بيع أو ربط بمسارات عروض الأسعار.
