@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Download, Expand, LineChart, Minus, Move, Network, Plus, RotateCcw, Shrink, ShoppingCart } from "lucide-react";
 import { buildSld, type SldModel } from "@/lib/sld-engine";
 import { downloadSldSheet } from "@/lib/sld-pdf";
