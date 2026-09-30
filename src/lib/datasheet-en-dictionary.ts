@@ -267,6 +267,22 @@ export const SPEC_LABELS_EN: Record<string, string> = {
 
 /** كلمات وعبارات تظهر داخل القيم — تُستبدل من الأطول إلى الأقصر. */
 export const VALUE_PHRASES_EN: [string, string][] = [
+  ["تبريد هوائي", "Air cooling"],
+  ["سلسلة واحدة", "single string"],
+  ["أكثر من", "more than"],
+  ["أكبر من", "greater than"],
+  ["أقل من", "less than"],
+  ["حمل خطي", "linear load"],
+  ["بدون محول عزل", "Transformerless"],
+  ["متقدم", "leading"],
+  ["متأخر", "lagging"],
+  ["تقليم الذروة", "Peak shaving"],
+  ["إزاحة الطاقة", "energy shifting"],
+  ["الاستهلاك الذاتي", "self-consumption"],
+  ["التغذية الاحتياطية", "backup supply"],
+  ["دورة", "cycles"],
+  ["أقصى", "max."],
+  ["طن", "tons"],
   ["الشحن تحت 0°C عبر فيلم التسخين", "charging below 0°C via heating film"],
   ["حتى 16 بطارية على التوازي", "up to 16 batteries in parallel"],
   ["يتطلب LV-HUB-V2 للمجموعات المتعددة", "LV-HUB-V2 required for multiple groups"],
