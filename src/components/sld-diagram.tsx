@@ -23,7 +23,9 @@ const C = {
 
 const F = "'Segoe UI', 'Tahoma', sans-serif";
 
-type Props = { params: Record<string, unknown> | null; number?: string };
+type SldActions = { onBackToQuote: () => void; onBuy: () => void; onStudy?: (() => void) | undefined };
+type Props = { params: Record<string, unknown> | null; number?: string; actions?: SldActions | undefined };
+
 
 /** رمز لوح شمسي قياسي. */
 function PvSymbol({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
