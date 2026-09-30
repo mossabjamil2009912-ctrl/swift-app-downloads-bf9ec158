@@ -4,7 +4,7 @@ import actesLogo from "@/assets/actes-logo-full.webp";
 import actesLogoWhite from "@/assets/actes-logo-white.webp";
 import { useLang, type Lang } from "@/lib/i18n";
 import { SoundToggle } from "@/lib/click-sound";
-import { prepareSpeech, prepareWelcome, quoteSpeech, replaySpeech, respeakScreen, speakScreen, speakWelcome, studySpeech, stopSpeaking, unlockVoice, viewSpeech } from "@/lib/voice-guide";
+import { prepareSpeech, prepareWelcome, quoteSpeech, replaySpeech, respeakScreen, setScreenSpeechSilently, silenceNextScreen, speakScreen, speakWelcome, studySpeech, stopSpeaking, unlockVoice, viewSpeech } from "@/lib/voice-guide";
 import { startVoiceWarmup } from "@/lib/voice-warmup";
 import { preloadAppImages } from "@/lib/preload-images";
 import PvsystStudy from "@/components/pvsyst-study";
