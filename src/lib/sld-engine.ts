@@ -40,7 +40,7 @@ export type SldParams = {
   gen?: { kva?: number; ats?: number } | null;
 };
 
-export type SldCable = { tag: string; spec: string; route: string; kind: "dc" | "ac" | "earth" };
+export type SldCable = { tag: string; spec: string; route: string; kind: "dc" | "ac" | "earth" | "comm" };
 
 export type SldModel = {
   title: {
@@ -88,6 +88,10 @@ export type SldModel = {
   batBox: { name: string; rating: string } | null;
   acBox: { name: string; breakerA: number; phase3: boolean } | null;
   ats: { name: string; kva: number | null } | null;
+  /** عداد ذكي / محولات تيار عند نقطة الربط بالشبكة (للتحكم بالتصدير). */
+  meter: { name: string; ct: string } | null;
+  /** خط اتصالات نظام إدارة البطارية مع الإنفرتر. */
+  bms: { name: string; protocol: string } | null;
   grid: boolean;
   earth: { name: string } | null;
   cables: SldCable[];
@@ -246,6 +250,8 @@ export function buildSld(raw: Record<string, unknown> | null): SldModel | null {
     batBox: batBoxItem ? { name: String(batBoxItem.name || "Battery Protection Box"), rating: "MCCB 2P 250 A" } : null,
     acBox: acItem && inverter ? { name: String(acItem.name || "AC Protection Board"), breakerA: acBreaker, phase3 } : null,
     ats: atsItem || p.gen ? { name: String(atsItem?.name || "ATS / Generator Changeover"), kva: num(p.gen?.kva) || null } : null,
+    meter: sysMode !== "off" && inverter ? { name: "Smart Meter / CT", ct: phase3 ? "3 × CT 200/5 A" : "1 × CT 200/5 A" } : null,
+    bms: battery && inverter ? { name: String(bmsItem?.name || "Battery BMS"), protocol: "CAN 2.0B / RS485" } : null,
     grid: sysMode !== "off",
     earth: earthItem ? { name: String(earthItem.name || "Earthing Pit") } : null,
     cables: [],
@@ -276,8 +282,8 @@ export function buildSld(raw: Record<string, unknown> | null): SldModel | null {
   if (battery && inverter) {
     const size = battery.current ? conductor(battery.current) : "50";
     cables.push({
-      tag: model.batBox ? "W3" : "W3",
-      spec: `Flexible Cu 2×${size} mm² — DC${battery.current ? ` (${battery.current} A)` : ""}`,
+      tag: "W3",
+      spec: `2 × (1×${size} mm²) Cu single core flexible DC${battery.current ? ` (${battery.current} A)` : ""}`,
       route: model.batBox ? "Battery Bank → Battery Box → Inverter BAT Port" : "Battery Bank → Inverter BAT Port",
       kind: "dc",
     });
@@ -300,8 +306,33 @@ export function buildSld(raw: Record<string, unknown> | null): SldModel | null {
       kind: "ac",
     });
   }
+  if (battery && inverter) {
+    const size = conductor(acCurrent);
+    cables.push({
+      tag: "W6",
+      spec: `Cu XLPE ${phase3 ? `4×${size}` : `2×${size}`} mm² + E — 0.6/1 kV (${Math.round(acCurrent)} A)`,
+      route: "Inverter EPS / Backup Port → Critical Loads Panel",
+      kind: "ac",
+    });
+  }
   if (model.earth) {
     cables.push({ tag: "PE", spec: "Cu Earth 1×16 mm² (frames 1×6 mm²)", route: "Array frames + Inverter + Boards → Earthing Pit", kind: "earth" });
+  }
+  if (model.bms) {
+    cables.push({
+      tag: "C1",
+      spec: "Shielded twisted pair Cat6 / 2×0.5 mm² — CAN 2.0B / RS485",
+      route: "Battery BMS → Inverter Comm Port",
+      kind: "comm",
+    });
+  }
+  if (model.meter) {
+    cables.push({
+      tag: "C2",
+      spec: "Shielded twisted pair 2×0.75 mm² — RS485 (Modbus)",
+      route: "Smart Meter / CT at Grid Point → Inverter Meter Port",
+      kind: "comm",
+    });
   }
   model.cables = cables;
 
@@ -311,6 +342,9 @@ export function buildSld(raw: Record<string, unknown> | null): SldModel | null {
   if (inverter) notes.push(`${inverter.qty} × ${inverter.kw} kW ${phase3 ? "three phase" : "single phase"} inverter${inverter.mpptRange ? `, MPPT window ${inverter.mpptRange}` : ""}.`);
   if (battery) notes.push(`Battery bank ${battery.qty} × ${battery.kwh} kWh = ${battery.totalKwh} kWh${battery.vdc ? ` @ ${battery.vdc} V DC` : ""}.`);
   if (bmsItem) notes.push(`High voltage battery control unit included: ${bmsItem.name}.`);
+  if (model.bms) notes.push("Battery BMS communication cable (CAN 2.0B / RS485, shielded) to be connected to the inverter comm port — mandatory for lithium batteries.");
+  if (model.meter) notes.push(`Smart meter / ${model.meter.ct} installed at the utility connection point and wired to the inverter for export control and load monitoring.`);
+  if (model.bms) notes.push("Inverter EPS / backup output feeds the critical loads panel only; grid port supplies non-critical loads (anti-islanding on grid failure).");
   if (model.acBox) notes.push(`AC main breaker ${model.acBox.breakerA} A ${phase3 ? "4P" : "2P"} with surge protection device.`);
   if (!model.grid) notes.push("Stand-alone system — no utility grid connection.");
   if (model.earth) notes.push("All metallic frames, boards and inverter bodies bonded to the earthing pit.");
