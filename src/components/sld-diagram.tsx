@@ -367,7 +367,11 @@ export function SldSvg({
               inv.vbat ? `BAT port: ${inv.vbat} V DC` : "",
             ].filter(Boolean)}
             accent={C.ac}
+            id="inv"
+            pick={pick}
+            active={active === "inv"}
           />
+
           <text x={xInv + wInv / 2} y={invY + invH + 12} textAnchor="middle" fontFamily={F} fontSize={8.2} fill={C.soft}>
             {inv.model}
           </text>
