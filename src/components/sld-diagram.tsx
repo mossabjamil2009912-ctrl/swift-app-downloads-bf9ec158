@@ -406,13 +406,18 @@ export function SldSvg({
                 bat.current ? `Max current ≈ ${bat.current} A` : "",
               ].filter(Boolean)}
               accent={C.dc}
+              id="bat"
+              pick={pick}
+              active={active === "bat"}
             />
             <BatterySymbol x={bankX + bankW + 14} y={batY} />
             <text x={bankX} y={batY + 50} fontFamily={F} fontSize={8} fill={C.soft}>{bat.model}</text>
             <line x1={bankX + bankW} y1={batY} x2={m.batBox ? boxX : riser} y2={batY} stroke={C.dc} strokeWidth={2} />
+            <Polarity x={bankX + bankW + 24} y={batY - 14} sign="+" />
+            <Polarity x={bankX + bankW + 24} y={batY + 26} sign="−" />
             {m.batBox ? (
               <>
-                <Block x={boxX} y={batY - 28} w={108} h={62} title="BATTERY BOX" lines={[m.batBox.rating]} accent={C.dc} />
+                <Block x={boxX} y={batY - 28} w={108} h={62} title="BATTERY BOX" lines={[m.batBox.rating, "Icu 10 kA"]} accent={C.dc} id="bat" pick={pick} active={active === "bat"} />
                 <BreakerSymbol x={boxX + 78} y={batY + 6} />
                 <line x1={boxX + 108} y1={batY} x2={riser} y2={batY} stroke={C.dc} strokeWidth={2} />
               </>
@@ -420,12 +425,14 @@ export function SldSvg({
               bat.breakerA && (
                 <>
                   <BreakerSymbol x={boxX + 40} y={batY + 4} />
-                  <text x={boxX + 50} y={batY + 26} fontFamily={F} fontSize={7.8} fill={C.ink}>{`DC ${bat.breakerA} A 2P`}</text>
+                  <text x={boxX + 50} y={batY + 26} fontFamily={F} fontSize={7.8} fill={C.ink}>{`DC ${bat.breakerA} A 2P — 10 kA`}</text>
                 </>
               )
             )}
             <line x1={riser} y1={batY} x2={riser} y2={invY + invH} stroke={C.dc} strokeWidth={2} />
-            <WireTag x={riser + 20} y={batY - 8} text={m.cables.find((c) => /BAT/.test(c.route))?.tag || "W3"} color={C.dc} />
+            <Node x={riser} y={batY} color={C.dc} />
+            <Node x={riser} y={invY + invH} color={C.dc} />
+            <WireTag x={riser + 26} y={batY - 8} text={`${m.cables.find((c) => /BAT/.test(c.route))?.tag || "W3"}${drop("W3")}`} color={C.dc} />
             <text x={riser + 6} y={invY + invH + 26} fontFamily={F} fontSize={7.6} fill={C.dc}>BAT</text>
           </>
         );
@@ -435,7 +442,9 @@ export function SldSvg({
       {ac && inv && (
         <>
           <line x1={xInv + wInv} y1={dcY} x2={xAc} y2={dcY} stroke={C.ac} strokeWidth={2} />
-          <WireTag x={(xInv + wInv + xAc) / 2} y={dcY - 6} text="W4" color={C.ac} />
+          <WireTag x={(xInv + wInv + xAc) / 2} y={dcY - 6} text={`W4${drop("W4")}`} color={C.ac} />
+          <PhaseMark x={(xInv + wInv + xAc) / 2} y={dcY} phase3={phase3} />
+          <Node x={xAc} y={dcY} color={C.ac} />
           <Block
             x={xAc}
             y={invY - 6}
@@ -444,9 +453,11 @@ export function SldSvg({
             title="AC PROTECTION BOARD"
             lines={[
               `Main ${ac.breakerA} A ${ac.phase3 ? "4P" : "2P"}`,
-              ac.phase3 ? "L1 / L2 / L3 / N" : "L / N",
+              ac.phase3 ? "L1 / L2 / L3 / N / PE" : "L / N / PE",
+              `Icu ${ac.phase3 || ac.breakerA > 63 ? 15 : 6} kA`,
               "AC SPD Type 2",
             ]}
+
             accent={C.ac}
           />
           <BreakerSymbol x={xAc + wAc - 24} y={dcY} />
