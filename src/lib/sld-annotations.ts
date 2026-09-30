@@ -8,7 +8,7 @@ import type { SldCable, SldModel } from "@/lib/sld-engine";
 const RHO = 0.0175; // Ω·mm²/m للنحاس عند 20°م
 
 /** أطوال تصميمية نمطية لكل مسار (م) عند غياب مسح موقعي فعلي. */
-const ROUTE_LENGTH: Record<string, number> = { W1: 45, W2: 20, W3: 5, W4: 12, W5: 18, PE: 25 };
+const ROUTE_LENGTH: Record<string, number> = { W1: 45, W2: 20, W3: 5, W4: 12, W5: 18, W6: 22, PE: 25, C1: 3, C2: 20 };
 
 export type CableCalc = {
   tag: string;
@@ -37,7 +37,7 @@ function currentOf(spec: string): number | null {
 
 /** سعة كسر القاطع المناسبة للمسار. */
 function breakingKa(kind: SldCable["kind"], phase3: boolean, amps: number | null): number | null {
-  if (kind === "earth") return null;
+  if (kind === "earth" || kind === "comm") return null;
   if (kind === "dc") return 10;
   if (phase3 || (amps || 0) > 63) return 15;
   return 6;
@@ -149,6 +149,14 @@ export function inspectorItems(m: SldModel): Record<string, InspectItem> {
           ? ([["مطابقة السلسلة", `Voc ${Math.round(m.pv.strVoc)} V — ${ok ? "مطابق للنطاق" : "يلزم مراجعة عدد الألواح"}`]] as [string, string][])
           : []),
         ...(m.inverter.vbat ? ([["منفذ البطارية", `${m.inverter.vbat} V DC`]] as [string, string][]) : []),
+        ...(m.bms
+          ? ([
+              ["منفذ الشبكة GRID", "الشبكة + الأحمال غير الحرجة — فصل تلقائي عند الانقطاع"],
+              ["منفذ الطوارئ EPS", "الأحمال الحرجة — تغذية مستمرة من البطارية"],
+              ["منفذ الاتصالات", `BMS ${m.bms.protocol}`],
+            ] as [string, string][])
+          : []),
+        ...(m.meter ? ([["منفذ العداد", "RS485 — Smart Meter / CT"]] as [string, string][]) : []),
         ["التأريض", "شاسيه الإنفرتر على ناقل PE الرئيسي"],
       ],
     };
@@ -197,6 +205,52 @@ export function inspectorItems(m: SldModel): Record<string, InspectItem> {
         ["الوظيفة", "تحويل بين الشبكة والمولد"],
         ...(m.ats.kva ? ([["المولد", `${m.ats.kva} kVA`]] as [string, string][]) : []),
         ["القطبية", phase3 ? "4 أقطاب" : "2 قطب"],
+      ],
+    };
+  }
+
+  if (m.meter) {
+    const c2 = byTag("C2");
+    out["meter"] = {
+      id: "meter",
+      title: "العداد الذكي ومحولات التيار",
+      subtitle: m.meter.name,
+      rows: [
+        ["الوظيفة", "قياس الاستهلاك ومنع التصدير للشبكة"],
+        ["محولات التيار", m.meter.ct],
+        ["موقع التركيب", "نقطة الربط بالشبكة — قبل لوحة الدخول"],
+        ["الاتصال بالإنفرتر", "RS485 — Modbus"],
+        ...(c2 ? ([["كابل الاتصال", c2.spec]] as [string, string][]) : []),
+      ],
+    };
+  }
+
+  if (m.bms) {
+    const c1 = byTag("C1");
+    out["bms"] = {
+      id: "bms",
+      title: "خط اتصالات نظام إدارة البطارية",
+      subtitle: m.bms.name,
+      rows: [
+        ["البروتوكول", m.bms.protocol],
+        ["الوظيفة", "التحكم بالشحن والتفريغ ومراقبة الحرارة والخلايا"],
+        ...(c1 ? ([["الكابل", c1.spec]] as [string, string][]) : []),
+        ["ملاحظة إلزامية", "بطاريات الليثيوم لا تعمل بدون هذا الخط"],
+      ],
+    };
+  }
+
+  if (m.bms) {
+    const w6 = byTag("W6");
+    out["backup"] = {
+      id: "backup",
+      title: "الأحمال الحرجة (مخرج الطوارئ EPS)",
+      subtitle: m.title.phase,
+      rows: [
+        ["المصدر", "مخرج الطوارئ من الإنفرتر — بطارية + ألواح"],
+        ["زمن التحويل", "أقل من 10 ميلي ثانية"],
+        ...(w6 ? ([["كابل التغذية", w6.spec]] as [string, string][]) : []),
+        ...(w6?.dropPct !== null && w6 ? ([["هبوط الجهد المتوقع", `${w6.dropPct}%`]] as [string, string][]) : []),
       ],
     };
   }

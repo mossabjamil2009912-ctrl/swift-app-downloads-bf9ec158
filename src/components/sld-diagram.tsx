@@ -15,6 +15,7 @@ const C = {
   dcN: "var(--sld-dcn)",
   ac: "var(--sld-ac)",
   earth: "var(--sld-earth)",
+  comm: "var(--sld-comm)",
   ink: "var(--sld-ink)",
   frame: "var(--sld-frame)",
   soft: "var(--sld-soft)",
@@ -30,6 +31,7 @@ const THEMES = {
     "--sld-dcn": "#1b1b1b",
     "--sld-ac": "#0f3f9e",
     "--sld-earth": "#1a8a2a",
+    "--sld-comm": "#7a3bbf",
     "--sld-ink": "#111111",
     "--sld-frame": "#111111",
     "--sld-soft": "#6b7280",
@@ -42,6 +44,7 @@ const THEMES = {
     "--sld-dcn": "#dbe7ff",
     "--sld-ac": "#8ec0ff",
     "--sld-earth": "#7ce58e",
+    "--sld-comm": "#d0a6ff",
     "--sld-ink": "#eaf2ff",
     "--sld-frame": "#9fc4ff",
     "--sld-soft": "#a7bfdd",
@@ -155,6 +158,19 @@ function EarthSymbol({ x, y }: { x: number; y: number }) {
       <line x1={x - 13} y1={y} x2={x + 13} y2={y} />
       <line x1={x - 8} y1={y + 5} x2={x + 8} y2={y + 5} />
       <line x1={x - 4} y1={y + 10} x2={x + 4} y2={y + 10} />
+    </g>
+  );
+}
+
+/** رمز عداد ذكي / محول تيار (IEC) عند نقطة الربط بالشبكة. */
+function MeterSymbol({ x, y }: { x: number; y: number }) {
+  return (
+    <g>
+      <circle cx={x} cy={y} r={11} fill={C.fill} stroke={C.ac} strokeWidth={1.5} />
+      <text x={x} y={y + 3.4} textAnchor="middle" fontFamily={F} fontSize={7.4} fontWeight={700} fill={C.ac}>
+        kWh
+      </text>
+      <path d={`M ${x - 16} ${y + 15} a 16 12 0 0 1 32 0`} fill="none" stroke={C.ac} strokeWidth={1.1} />
     </g>
   );
 }
@@ -332,8 +348,24 @@ export function SldSvg({
             <FuseSymbol key={i} x={xDc + wDc - 20} y={pvTop + i * rowH + 19} />
           ))}
           <SpdSymbol x={xDc + 22} y={pvTop + Math.max(pvH + 8, 74) + 12} />
-          <line x1={xDc + wDc} y1={dcY} x2={xInv} y2={dcY} stroke={C.dc} strokeWidth={2} />
-          <Node x={xDc + wDc} y={dcY} color={C.dc} />
+          {(() => {
+            const n = Math.min(Math.max(inv?.mppt || 1, 1), 3);
+            return Array.from({ length: n }).map((_, i) => {
+              const y = n === 1 ? dcY : dcY - 12 + (i * 24) / (n - 1);
+              return (
+                <g key={i}>
+                  <line x1={xDc + wDc} y1={y} x2={xInv} y2={y} stroke={C.dc} strokeWidth={2} />
+                  <Node x={xDc + wDc} y={y} color={C.dc} />
+                  <Node x={xInv} y={y} color={C.dc} />
+                  {n > 1 && (
+                    <text x={xInv - 8} y={y - 4} textAnchor="end" fontFamily={F} fontSize={7} fill={C.dc}>
+                      {`MPPT ${i + 1}`}
+                    </text>
+                  )}
+                </g>
+              );
+            });
+          })()}
         </>
       )}
       {!dc && pv && inv && <line x1={xPv + wPv} y1={dcY} x2={xInv} y2={dcY} stroke={C.dc} strokeWidth={2} />}
@@ -377,8 +409,11 @@ export function SldSvg({
           <text x={xInv + wInv / 2} y={invY + invH + 12} textAnchor="middle" fontFamily={F} fontSize={8.2} fill={C.soft}>
             {inv.model}
           </text>
-          <text x={xInv - 6} y={dcY + 12} textAnchor="end" fontFamily={F} fontSize={7.6} fill={C.dc}>DC IN</text>
-          <text x={xInv + wInv + 6} y={dcY + 12} fontFamily={F} fontSize={7.6} fill={C.ac}>AC OUT</text>
+          <text x={xInv - 6} y={dcY + 32} textAnchor="end" fontFamily={F} fontSize={7.6} fill={C.dc}>DC IN</text>
+          <text x={xInv + wInv + 6} y={dcY - 4} fontFamily={F} fontSize={7.6} fill={C.ac}>GRID OUT</text>
+          {bat && (
+            <text x={xInv + wInv + 6} y={dcY + 40} fontFamily={F} fontSize={7.6} fill={C.ac}>EPS / BACKUP</text>
+          )}
           {pv?.strVoc && inv.mpptRange && (
             <text x={xInv + wInv / 2} y={invY - 8} textAnchor="middle" fontFamily={F} fontSize={7.6} fill={C.soft}>
               {`STRING CHECK: Voc ${Math.round(pv.strVoc)} V within ${inv.mpptRange}`}
@@ -493,7 +528,9 @@ export function SldSvg({
       {/* ── الشبكة والأحمال ──────────────────────────────────────────────── */}
       {(() => {
         const from = m.ats && ac ? xAts + wAts : ac ? xAc + wAc : inv ? xInv + wInv : xAc;
-        const loadY = m.grid ? dcY + 34 : dcY;
+        const backup = Boolean(bat && inv);
+        const loadY = backup ? dcY + 86 : m.grid ? dcY + 34 : dcY;
+        const mx = xOut - 62;
         return (
           <>
             {m.grid && (
@@ -513,6 +550,20 @@ export function SldSvg({
                 <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
                 <line x1={xOut - 26} y1={dcY} x2={xOut - 26} y2={dcY - 50} stroke={C.ac} strokeWidth={2} />
                 <line x1={xOut - 26} y1={dcY - 50} x2={xOut} y2={dcY - 50} stroke={C.ac} strokeWidth={2} markerEnd="url(#sld-arrow)" />
+                <Node x={xOut - 26} y={dcY} color={C.ac} />
+                <PhaseMark x={(from + xOut) / 2 - 30} y={dcY} phase3={phase3} />
+                <WireTag x={(from + xOut) / 2 - 56} y={dcY - 6} text={`W5${drop("W5")}`} color={C.ac} />
+                {m.meter && (
+                  <g style={pick ? { cursor: "pointer" } : undefined} onClick={pick ? () => pick("meter") : undefined}>
+                    <MeterSymbol x={mx} y={dcY} />
+                    <text x={mx} y={dcY - 18} textAnchor="middle" fontFamily={F} fontSize={7.4} fontWeight={700} fill={C.ac}>
+                      SMART METER
+                    </text>
+                    <text x={mx} y={dcY + 32} textAnchor="middle" fontFamily={F} fontSize={7} fill={C.soft}>
+                      {m.meter.ct}
+                    </text>
+                  </g>
+                )}
               </>
             )}
             <Block
@@ -520,20 +571,65 @@ export function SldSvg({
               y={loadY - 26}
               w={wOut}
               h={56}
-              title={m.battery ? "BACKUP / SITE LOADS" : "SITE LOADS"}
-              lines={[m.title.phase, ""].filter(Boolean)}
+              title={backup ? "CRITICAL / BACKUP LOADS" : "SITE LOADS"}
+              lines={[m.title.phase]}
               accent={C.ac}
-              id="loads"
+              id={backup ? "backup" : "loads"}
               pick={pick}
-              active={active === "loads"}
+              active={active === (backup ? "backup" : "loads")}
             />
-            <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
-            <line x1={xOut - 26} y1={dcY} x2={xOut - 26} y2={loadY} stroke={C.ac} strokeWidth={2} />
-            <line x1={xOut - 26} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={2} markerEnd="url(#sld-arrow)" />
-            <Node x={xOut - 26} y={dcY} color={C.ac} />
-            <PhaseMark x={(from + xOut) / 2 + 26} y={dcY} phase3={phase3} />
-            <WireTag x={(from + xOut) / 2} y={dcY - 6} text={`W5${drop("W5")}`} color={C.ac} />
+            {backup ? (
+              <>
+                <line x1={xInv + wInv} y1={dcY + 30} x2={xInv + wInv + 18} y2={dcY + 30} stroke={C.ac} strokeWidth={2} />
+                <line x1={xInv + wInv + 18} y1={dcY + 30} x2={xInv + wInv + 18} y2={loadY} stroke={C.ac} strokeWidth={2} />
+                <line x1={xInv + wInv + 18} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={2} markerEnd="url(#sld-arrow)" />
+                <Node x={xInv + wInv} y={dcY + 30} color={C.ac} />
+                <PhaseMark x={(xInv + wInv + xOut) / 2 + 40} y={loadY} phase3={phase3} />
+                <WireTag x={(xInv + wInv + xOut) / 2 - 40} y={loadY - 6} text={`W6 — EPS BACKUP${drop("W6")}`} color={C.ac} />
+              </>
+            ) : (
+              <>
+                <line x1={from} y1={dcY} x2={xOut - 26} y2={dcY} stroke={C.ac} strokeWidth={2} />
+                <line x1={xOut - 26} y1={dcY} x2={xOut - 26} y2={loadY} stroke={C.ac} strokeWidth={2} />
+                <line x1={xOut - 26} y1={loadY} x2={xOut} y2={loadY} stroke={C.ac} strokeWidth={2} markerEnd="url(#sld-arrow)" />
+                <Node x={xOut - 26} y={dcY} color={C.ac} />
+                <PhaseMark x={(from + xOut) / 2 + 26} y={dcY} phase3={phase3} />
+                <WireTag x={(from + xOut) / 2} y={dcY - 6} text={`W5${drop("W5")}`} color={C.ac} />
+              </>
+            )}
           </>
+        );
+      })()}
+
+      {/* ── خطوط الاتصالات (BMS / العداد الذكي) ───────────────────────────── */}
+      {(m.bms || m.meter) && inv && (() => {
+        const commY = earthY - 32;
+        const riser = xInv + wInv - 28;
+        return (
+          <g>
+            <line x1={riser} y1={dcY + 46} x2={riser} y2={commY} stroke={C.comm} strokeWidth={1.6} strokeDasharray="6 4" />
+            <Node x={riser} y={dcY + 46} color={C.comm} />
+            <text x={riser + 6} y={dcY + 60} fontFamily={F} fontSize={7.4} fill={C.comm}>COMM</text>
+            {m.bms && bat && (() => {
+              const bx = xInv - 336 + 92;
+              return (
+                <g style={pick ? { cursor: "pointer" } : undefined} onClick={pick ? () => pick("bms") : undefined}>
+                  <line x1={bx} y1={batY + 36} x2={bx} y2={commY} stroke={C.comm} strokeWidth={1.6} strokeDasharray="6 4" />
+                  <line x1={bx} y1={commY} x2={riser} y2={commY} stroke={C.comm} strokeWidth={1.6} strokeDasharray="6 4" />
+                  <Node x={bx} y={commY} color={C.comm} />
+                  <WireTag x={(bx + riser) / 2} y={commY - 6} text="C1 — BMS CAN / RS485 (shielded)" color={C.comm} />
+                </g>
+              );
+            })()}
+            {m.meter && m.grid && (
+              <g style={pick ? { cursor: "pointer" } : undefined} onClick={pick ? () => pick("meter") : undefined}>
+                <line x1={xOut - 62} y1={dcY + 12} x2={xOut - 62} y2={commY + 16} stroke={C.comm} strokeWidth={1.6} strokeDasharray="6 4" />
+                <line x1={xOut - 62} y1={commY + 16} x2={riser} y2={commY + 16} stroke={C.comm} strokeWidth={1.6} strokeDasharray="6 4" />
+                <Node x={riser} y={commY + 16} color={C.comm} />
+                <WireTag x={(xOut - 62 + riser) / 2} y={commY + 11} text="C2 — METER RS485 (Modbus)" color={C.comm} />
+              </g>
+            )}
+          </g>
         );
       })()}
 
