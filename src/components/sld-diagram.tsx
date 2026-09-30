@@ -996,6 +996,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
           <h3 className="truncate text-sm font-black">المخطط الكهربائي أحادي الخط (SLD)</h3>
           {controls}
         </div>
+        {flowBar}
         {canvas}
       </div>
     );
