@@ -176,7 +176,7 @@ export default function ProductVideoPlayer({
           </button>
           <button
             type="button"
-            onClick={toggleSound}
+            onClick={() => void toggleSound()}
             aria-label={muted ? "تشغيل الشرح الصوتي" : "كتم الشرح الصوتي"}
             className="inline-flex size-9 items-center justify-center rounded-full bg-navy/75 text-skyline-foreground backdrop-blur transition hover:bg-navy"
           >
@@ -184,7 +184,8 @@ export default function ProductVideoPlayer({
           </button>
           <button
             type="button"
-            onClick={replay}
+            onClick={() => void replay()}
+
             aria-label="إعادة التشغيل"
             className="inline-flex size-9 items-center justify-center rounded-full bg-navy/75 text-skyline-foreground backdrop-blur transition hover:bg-navy"
           >
