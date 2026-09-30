@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { Loader2, Pause, Play, RotateCcw, SkipForward, Volume2, VolumeX } from "lucide-react";
 import type { ProductVideo } from "@/lib/product-video";
 import { videoNarration } from "@/lib/product-video";
 import { isVoiceOn, speak, stopSpeaking, unlockVoice } from "@/lib/voice-guide";
@@ -19,26 +19,39 @@ export default function ProductVideoPlayer({
   const ref = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(!isVoiceOn());
+  const [preparing, setPreparing] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const narration = narrationProp || videoNarration(title, video);
   const spokenRef = useRef("");
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
 
-  // الفيديو نفسه بلا مسار صوتي، والشرح يأتي من التعليق الصوتي العربي.
+  // الفيديو نفسه بلا مسار صوتي: ننتظر جاهزية التعليق الصوتي ثم ننطلق معاً في اللحظة نفسها.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     el.muted = true;
-    el.play().catch(() => setPlaying(false));
-  }, [video.src]);
-
-  // نطق اسم المنتج ونوعه وقدرته ومواصفاته مع بداية العرض.
-  useEffect(() => {
-    if (muted || !isVoiceOn() || spokenRef.current === narration) return;
+    let cancelled = false;
+    const startVideo = () => {
+      if (cancelled || !ref.current) return;
+      ref.current.currentTime = 0;
+      void ref.current.play().catch(() => setPlaying(false));
+    };
+    if (mutedRef.current || !isVoiceOn()) {
+      startVideo();
+      return () => { cancelled = true; };
+    }
     spokenRef.current = narration;
     unlockVoice();
-    void speak(narration, true);
-  }, [narration, muted]);
+    setPreparing(true);
+    void speak(narration, true).finally(() => {
+      if (cancelled) return;
+      setPreparing(false);
+      startVideo();
+    });
+    return () => { cancelled = true; };
+  }, [video.src, narration]);
 
   // لا نوقف التعليق عند إخفاء المشغّل: شرح صفحة المنتج يكمل مباشرة بعد تعليق الفيديو بلا انقطاع.
 
@@ -55,30 +68,51 @@ export default function ProductVideoPlayer({
     }
   };
 
-  const replay = () => {
+  /** إعادة التشغيل: الصوت يُجهَّز أولاً ثم ينطلق الفيديو معه من البداية. */
+  const replay = async () => {
     const el = ref.current;
     if (!el) return;
+    el.pause();
     el.currentTime = 0;
-    void el.play();
     stopSpeaking();
     spokenRef.current = "";
     if (!muted && isVoiceOn()) {
       spokenRef.current = narration;
-      void speak(narration, true);
+      setPreparing(true);
+      await speak(narration, true);
+      setPreparing(false);
     }
+    el.currentTime = 0;
+    void el.play();
   };
 
-  const toggleSound = () => {
+  const toggleSound = async () => {
     if (muted) {
       setMuted(false);
       unlockVoice();
-      spokenRef.current = narration;
-      void speak(narration, true);
+      await replayWithVoice();
     } else {
       setMuted(true);
       stopSpeaking();
     }
   };
+
+  /** تشغيل الشرح مع إعادة الفيديو من أوله حتى يتزامن الكلام مع بطاقات المواصفات. */
+  const replayWithVoice = async () => {
+    const el = ref.current;
+    if (!el) return;
+    el.pause();
+    el.currentTime = 0;
+    spokenRef.current = narration;
+    setPreparing(true);
+    await speak(narration, true);
+    setPreparing(false);
+    if (!ref.current) return;
+    ref.current.currentTime = 0;
+    void ref.current.play();
+  };
+
+
 
 
   return (
