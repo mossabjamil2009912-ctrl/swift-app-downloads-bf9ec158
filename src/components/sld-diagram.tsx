@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { ArrowRight, Download, LineChart, Minus, Move, Network, Plus, RotateCcw, ShoppingCart } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowRight, Download, Expand, LineChart, Minus, Move, Network, Plus, RotateCcw, Shrink, ShoppingCart } from "lucide-react";
 import { buildSld, type SldModel } from "@/lib/sld-engine";
 import { downloadSldSheet } from "@/lib/sld-pdf";
 import logoAsset from "@/assets/actes-logo-sld.png.asset.json";
@@ -128,7 +128,7 @@ function WireTag({ x, y, text: label, color }: { x: number; y: number; text: str
 }
 
 /** يرسم المخطط الأحادي الكامل داخل عنصر SVG واحد. */
-export function SldSvg({ m }: { m: SldModel }) {
+export function SldSvg({ m, fit = false }: { m: SldModel; fit?: boolean }) {
   const W = 1240;
   const drawnStrings = Math.min(m.pv?.strings || 1, 4);
   const pvTop = 52;
@@ -167,7 +167,14 @@ export function SldSvg({ m }: { m: SldModel }) {
   const dcY = busY;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Single Line Diagram" style={{ background: C.fill }}>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      {...(fit ? { height: "100%", preserveAspectRatio: "xMidYMid meet" } : {})}
+      role="img"
+      aria-label="Single Line Diagram"
+      style={fit ? { background: C.fill, display: "block" } : { background: C.fill }}
+    >
       <defs>
         <marker id="sld-arrow" markerWidth={8} markerHeight={8} refX={7} refY={4} orient="auto">
           <path d="M0,0 L8,4 L0,8 z" fill={C.ac} />
@@ -397,12 +404,36 @@ export function SldSvg({ m }: { m: SldModel }) {
   );
 }
 
-/** شاشة المخطط الأحادي الرسمي داخل التطبيق مع تكبير وتحريك وتحميل. */
+/** شاشة المخطط الأحادي الرسمي داخل التطبيق مع تكبير وتحريك وملء الشاشة. */
 export default function SldDiagram({ params, number, actions }: Props) {
   const model = useMemo(() => buildSld(params), [params]);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [full, setFull] = useState(false);
+  const [rot, setRot] = useState<{ on: boolean; w: number; h: number }>({ on: false, w: 0, h: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * في ملء الشاشة على الهواتف الطولية يُدار الرسم العريض 90° ليملأ الشاشة كاملة
+   * بدل ظهوره كشريط رقيق في الوسط.
+   */
+  useEffect(() => {
+    const fitBox = () => {
+      const box = boxRef.current;
+      if (!box) return;
+      const cw = box.clientWidth;
+      const ch = box.clientHeight;
+      if (!cw || !ch) return;
+      const portrait = ch > cw * 1.15;
+      setRot(full && portrait ? { on: true, w: ch, h: cw } : { on: false, w: 0, h: 0 });
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    };
+    fitBox();
+    window.addEventListener("resize", fitBox);
+    return () => window.removeEventListener("resize", fitBox);
+  }, [full, model]);
 
   if (!model) return null;
 
@@ -416,6 +447,72 @@ export default function SldDiagram({ params, number, actions }: Props) {
     setPan({ x: d.px + (e.clientX - d.x), y: d.py + (e.clientY - d.y) });
   };
   const onUp = () => { drag.current = null; };
+
+  const controls = (
+    <div className="flex items-center gap-1.5">
+      <button type="button" onClick={() => setZoom((z) => Math.min(8, +(z + 0.5).toFixed(2)))} aria-label="تكبير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
+        <Plus className="size-4" />
+      </button>
+      <button type="button" onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.5).toFixed(2)))} aria-label="تصغير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
+        <Minus className="size-4" />
+      </button>
+      <button type="button" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} aria-label="إعادة الضبط" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
+        <RotateCcw className="size-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => { setFull((v) => !v); setPan({ x: 0, y: 0 }); }}
+        aria-label={full ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
+        className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand"
+      >
+        {full ? <Shrink className="size-4" /> : <Expand className="size-4" />}
+      </button>
+    </div>
+  );
+
+  const canvas = (
+    <div
+      ref={boxRef}
+      className={`relative overflow-hidden rounded-md border border-border bg-white touch-none ${full ? "h-[calc(100vh-6.5rem)]" : "h-[62vh] min-h-[320px]"}`}
+      onPointerDown={onDown}
+      onPointerMove={onMove}
+      onPointerUp={onUp}
+      onPointerCancel={onUp}
+      style={{ cursor: "grab" }}
+      dir="ltr"
+    >
+      <div
+        className={rot.on ? "absolute" : "h-full w-full"}
+        style={
+          rot.on
+            ? {
+                width: rot.w,
+                height: rot.h,
+                left: "50%",
+                top: "50%",
+                transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) rotate(90deg) scale(${zoom})`,
+                transformOrigin: "50% 50%",
+              }
+            : { transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "50% 50%" }
+        }
+      >
+        <SldSvg m={model} fit />
+      </div>
+    </div>
+  );
+
+
+  if (full) {
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col gap-2 bg-background p-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="truncate text-sm font-black">المخطط الكهربائي أحادي الخط (SLD)</h3>
+          {controls}
+        </div>
+        {canvas}
+      </div>
+    );
+  }
 
   return (
     <section className="mt-3 rounded-lg border border-border bg-card p-3">
@@ -432,35 +529,14 @@ export default function SldDiagram({ params, number, actions }: Props) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button type="button" onClick={() => setZoom((z) => Math.min(4, +(z + 0.25).toFixed(2)))} aria-label="تكبير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
-            <Plus className="size-4" />
-          </button>
-          <button type="button" onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.25).toFixed(2)))} aria-label="تصغير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
-            <Minus className="size-4" />
-          </button>
-          <button type="button" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} aria-label="إعادة الضبط" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
-            <RotateCcw className="size-4" />
-          </button>
-        </div>
+        {controls}
       </div>
 
-      <div
-        className="mt-3 overflow-hidden rounded-md border border-border bg-white touch-none"
-        onPointerDown={onDown}
-        onPointerMove={onMove}
-        onPointerUp={onUp}
-        onPointerCancel={onUp}
-        style={{ cursor: "grab" }}
-        dir="ltr"
-      >
-        <div style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}>
-          <SldSvg m={model} />
-        </div>
-      </div>
+      <div className="mt-3">{canvas}</div>
       <p className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
-        <Move className="size-3" /> اسحب المخطط للتحريك، واستخدم + و − للتكبير والتصغير.
+        <Move className="size-3" /> اسحب المخطط للتحريك، و + و − للتكبير، وزر ملء الشاشة لعرضه بالكامل.
       </p>
+
 
       {/* كتلة بيانات اللوحة الرسمية */}
       <div className="mt-3 overflow-hidden rounded-md border border-border" dir="ltr">
