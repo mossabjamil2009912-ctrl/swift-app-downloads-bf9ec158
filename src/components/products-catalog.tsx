@@ -184,7 +184,7 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void
         <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-full bg-navy-soft px-2 py-0.5 text-[11px] font-black text-navy lg:text-xs" dir="ltr">
           <Zap className="size-3" />{product.power}
         </span>
-        <button type="button" onClick={onOpen} className="mt-auto inline-flex w-full items-center justify-center gap-1 rounded-full bg-brand px-2 py-1.5 text-[11px] font-bold text-brand-foreground shadow-sm transition hover:opacity-90 lg:text-xs">
+        <button type="button" onClick={() => { warm(); onOpen(); }} className="mt-auto inline-flex w-full items-center justify-center gap-1 rounded-full bg-brand px-2 py-1.5 text-[11px] font-bold text-brand-foreground shadow-sm transition hover:opacity-90 lg:text-xs">
           <ArrowRight className="size-3.5" /> عرض المنتج
         </button>
       </div>
