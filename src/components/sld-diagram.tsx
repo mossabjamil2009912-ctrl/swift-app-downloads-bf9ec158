@@ -544,9 +544,10 @@ export function SldSvg({
             h={invH + 12}
             title="AC PROTECTION BOARD"
             lines={[
-              `Main ${ac.breakerA} A ${ac.phase3 ? "4P" : "2P"}`,
+              `Main ${ac.breakerA} A ${ac.phase3 ? "4P" : "2P"} — IP54`,
               ac.phase3 ? "L1 / L2 / L3 / N / PE" : "L / N / PE",
               `Icu ${ac.phase3 || ac.breakerA > 63 ? 15 : 6} kA`,
+              `RCD Type B 30 mA ${ac.phase3 ? "4P" : "2P"}`,
               "AC SPD Type 2",
             ]}
             accent={C.ac}
