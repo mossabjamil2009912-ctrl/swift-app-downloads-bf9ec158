@@ -606,14 +606,26 @@ export default function SldDiagram({ params, number, actions }: Props) {
       const ch = box.clientHeight;
       if (!cw || !ch) return;
       const portrait = ch > cw * 1.15;
-      setRot(full && portrait ? { on: true, w: ch, h: cw } : { on: false, w: 0, h: 0 });
-      setZoom(1);
+      const rotated = full && portrait;
+      setRot(rotated ? { on: true, w: ch, h: cw } : { on: false, w: 0, h: 0 });
+      // ملاءمة تلقائية: يكبّر الرسم ليملأ مساحة العرض عمودياً أيضاً بدل بقائه شريطاً في الوسط.
+      const svg = box.querySelector("svg");
+      const vb = svg?.getAttribute("viewBox")?.split(/\s+/).map(Number);
+      const vw = vb && vb.length === 4 ? (vb[2] as number) : 1240;
+      const vh = vb && vb.length === 4 ? (vb[3] as number) : 520;
+      const bw = rotated ? ch : cw;
+      const bh = rotated ? cw : ch;
+      const fitScale = Math.min(bw / vw, bh / vh);
+      const coverScale = Math.min(bw / vw, bh / vh) === bw / vw ? bh / vh : bw / vw;
+      const z = fitScale > 0 ? Math.min(2.6, Math.max(1, coverScale / fitScale)) : 1;
+      setZoom(+z.toFixed(2));
       setPan({ x: 0, y: 0 });
     };
-    fitBox();
+    const t = window.setTimeout(fitBox, 60);
     window.addEventListener("resize", fitBox);
-    return () => window.removeEventListener("resize", fitBox);
+    return () => { window.clearTimeout(t); window.removeEventListener("resize", fitBox); };
   }, [full, model]);
+
 
   if (!model) return null;
 
