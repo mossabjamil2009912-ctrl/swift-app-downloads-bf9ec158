@@ -61,7 +61,7 @@ function specTables(product: Product): string {
  * يفتح كتالوج الموديل كصفحة طباعة A4 جاهزة للحفظ كـ PDF.
  * التنسيق: ترويسة بشعار أكتس واسم المصنّع، بطاقة الصنف بالقدرة الصريحة، جدول المواصفات، تذييل رسمي.
  */
-export function buildDatasheetHtml(product: Product): string {
+export function buildDatasheetHtml(product: Product, autoPrint = false): string {
   const logo = abs(actesLogo.url);
   const photo = abs(product.image);
   const today = new Date().toLocaleDateString("en-GB");
@@ -175,18 +175,27 @@ export function buildDatasheetHtml(product: Product): string {
   </div>
 </div>
 
-<script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script>
+${autoPrint ? `<script>window.onload=function(){setTimeout(function(){window.print()},600)}<\\/script>` : ""}
 </body></html>`;
   return html;
 }
 
-/** يفتح كتالوج الموديل في نافذة طباعة جاهزة للحفظ كـ PDF. */
-export function openInverterDatasheet(product: Product): void {
+function openDatasheetWindow(product: Product, autoPrint: boolean): void {
   if (typeof window === "undefined") return;
-  const html = buildDatasheetHtml(product);
+  const html = buildDatasheetHtml(product, autoPrint);
   const w = window.open("", "_blank");
   if (!w) return;
   w.document.open();
   w.document.write(html);
   w.document.close();
+}
+
+/** يفتح كتالوج الموديل للقراءة داخل نافذة جديدة بدون أي أمر طباعة. */
+export function openInverterDatasheet(product: Product): void {
+  openDatasheetWindow(product, false);
+}
+
+/** يفتح كتالوج الموديل ويبدأ حفظه كملف PDF مباشرة. */
+export function downloadInverterDatasheet(product: Product): void {
+  openDatasheetWindow(product, true);
 }
