@@ -814,6 +814,78 @@ export default function SldDiagram({ params, number, actions }: Props) {
   };
   const onUp = () => { drag.current = null; };
 
+  /**
+   * يحفظ المخطط صورة عالية الدقة (×3) جاهزة للطباعة والمشاركة الميدانية،
+   * برسم نسخة من الـ SVG على لوحة نقطية مع خلفية النمط الحالي.
+   */
+  const saveImage = () => {
+    const src = boxRef.current?.querySelector("svg");
+    if (!src) return;
+    setSaving(true);
+    const bgColor = theme === "paper" ? "#ffffff" : "#0b2545";
+    const clone = src.cloneNode(true) as SVGSVGElement;
+    const vb = (clone.getAttribute("viewBox") || "0 0 1240 520").split(/\s+/).map(Number);
+    const vw = vb[2] || 1240;
+    const vh = vb[3] || 520;
+    clone.setAttribute("width", String(vw));
+    clone.setAttribute("height", String(vh));
+    clone.removeAttribute("preserveAspectRatio");
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", "0");
+    rect.setAttribute("y", "0");
+    rect.setAttribute("width", String(vw));
+    rect.setAttribute("height", String(vh));
+    rect.setAttribute("fill", bgColor);
+    clone.insertBefore(rect, clone.firstChild);
+    const xml = new XMLSerializer().serializeToString(clone);
+    const img = new Image();
+    const scale = 3;
+    const done = () => setSaving(false);
+    img.onload = () => {
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(vw * scale);
+      cv.height = Math.round(vh * scale);
+      const ctx = cv.getContext("2d");
+      if (!ctx) return done();
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      const a = document.createElement("a");
+      a.href = cv.toDataURL("image/png");
+      a.download = `ACTES-SLD-${number || model.title.ref || "diagram"}.png`;
+      a.click();
+      done();
+    };
+    img.onerror = done;
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`;
+  };
+
+  const FLOWS: { id: SldFlow; label: string }[] = [
+    { id: "none", label: "المخطط الأساسي" },
+    { id: "day", label: "وضع النهار" },
+    { id: "night", label: "وضع الليل" },
+    { id: "outage", label: "انقطاع الشبكة" },
+  ];
+
+  const flowBar = (
+    <div className="flex flex-wrap items-center gap-1.5" dir="rtl">
+      {FLOWS.map((f) => (
+        <button
+          key={f.id}
+          type="button"
+          onClick={() => setFlow(f.id)}
+          className={`rounded-full border px-3 py-1.5 text-[10.5px] font-black transition ${
+            flow === f.id
+              ? "border-brand bg-brand text-brand-foreground"
+              : "border-border bg-card text-skyline hover:border-brand hover:text-brand"
+          }`}
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
+  );
+
   const controls = (
     <div className="flex items-center gap-1.5">
       <button type="button" onClick={() => setZoom((z) => Math.min(8, +(z + 0.5).toFixed(2)))} aria-label="تكبير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
