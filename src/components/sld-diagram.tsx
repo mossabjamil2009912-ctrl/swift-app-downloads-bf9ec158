@@ -411,6 +411,25 @@ export default function SldDiagram({ params, number, actions }: Props) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [full, setFull] = useState(false);
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+
+  /** يملأ مساحة العرض بالكامل: يكبّر الرسم حتى يغطي أقصر بُعد في الحاوية. */
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+    const svg = box.querySelector("svg");
+    const vb = svg?.getAttribute("viewBox")?.split(/\s+/).map(Number);
+    if (!vb || vb.length < 4) return;
+    const [, , vw, vh] = vb as [number, number, number, number];
+    const cw = box.clientWidth;
+    const ch = box.clientHeight;
+    if (!cw || !ch || !vw || !vh) return;
+    const meet = Math.min(cw / vw, ch / vh);
+    const cover = Math.max(cw / vw, ch / vh);
+    if (meet <= 0) return;
+    setZoom(+Math.min(6, Math.max(1, cover / meet)).toFixed(3));
+    setPan({ x: 0, y: 0 });
+  }, [full, model]);
 
   if (!model) return null;
 
@@ -427,10 +446,10 @@ export default function SldDiagram({ params, number, actions }: Props) {
 
   const controls = (
     <div className="flex items-center gap-1.5">
-      <button type="button" onClick={() => setZoom((z) => Math.min(6, +(z + 0.25).toFixed(2)))} aria-label="تكبير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
+      <button type="button" onClick={() => setZoom((z) => Math.min(8, +(z + 0.5).toFixed(2)))} aria-label="تكبير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
         <Plus className="size-4" />
       </button>
-      <button type="button" onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.25).toFixed(2)))} aria-label="تصغير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
+      <button type="button" onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.5).toFixed(2)))} aria-label="تصغير" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
         <Minus className="size-4" />
       </button>
       <button type="button" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} aria-label="إعادة الضبط" className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand">
@@ -438,7 +457,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
       </button>
       <button
         type="button"
-        onClick={() => { setFull((v) => !v); setZoom(1); setPan({ x: 0, y: 0 }); }}
+        onClick={() => { setFull((v) => !v); setPan({ x: 0, y: 0 }); }}
         aria-label={full ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
         className="grid size-9 place-items-center rounded-full border border-border bg-card text-skyline transition hover:border-brand hover:text-brand"
       >
@@ -449,7 +468,8 @@ export default function SldDiagram({ params, number, actions }: Props) {
 
   const canvas = (
     <div
-      className={`overflow-hidden rounded-md border border-border bg-white touch-none ${full ? "h-[calc(100vh-7rem)]" : "h-[62vh] min-h-[320px]"}`}
+      ref={boxRef}
+      className={`overflow-hidden rounded-md border border-border bg-white touch-none ${full ? "h-[calc(100vh-6.5rem)]" : "h-[62vh] min-h-[320px]"}`}
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
@@ -465,6 +485,7 @@ export default function SldDiagram({ params, number, actions }: Props) {
       </div>
     </div>
   );
+
 
   if (full) {
     return (
