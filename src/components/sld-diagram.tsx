@@ -573,24 +573,6 @@ export function SldSvg({
         );
       })()}
 
-      {false && m.earth && (
-
-        <>
-          <line x1={xPv} y1={earthY} x2={xOut + wOut} y2={earthY} stroke={C.earth} strokeWidth={2} strokeDasharray="7 4" />
-          {[xPv + 60, dc ? xDc + wDc / 2 : null, inv ? xInv + wInv / 2 : null, ac ? xAc + wAc / 2 : null].filter(
-            (v): v is number => v !== null,
-          ).map((x) => (
-            <line key={x} x1={x} y1={earthY - 22} x2={x} y2={earthY} stroke={C.earth} strokeWidth={1.4} strokeDasharray="4 3" />
-          ))}
-          <EarthSymbol x={xOut + wOut - 40} y={earthY + 8} />
-          <text x={xOut + wOut - 40} y={earthY - 13} textAnchor="middle" fontFamily={F} fontSize={8.4} fill={C.earth}>
-            EARTHING PIT
-          </text>
-          <text x={xPv} y={earthY - 13} fontFamily={F} fontSize={8.4} fontWeight={700} fill={C.earth}>
-            PE — EARTH BONDING BUS 1×16 mm²
-          </text>
-        </>
-      )}
     </svg>
   );
 }
