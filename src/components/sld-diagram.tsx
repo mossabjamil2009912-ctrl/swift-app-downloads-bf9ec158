@@ -24,7 +24,7 @@ const C = {
 const F = "'Segoe UI', 'Tahoma', sans-serif";
 
 type SldActions = { onBackToQuote: () => void; onBuy: () => void; onStudy?: (() => void) | undefined };
-type Props = { params: Record<string, unknown> | null; number?: string; actions?: SldActions | undefined };
+type Props = { params: Record<string, unknown> | null; number?: string | undefined; actions?: SldActions | undefined };
 
 
 /** رمز لوح شمسي قياسي. */
