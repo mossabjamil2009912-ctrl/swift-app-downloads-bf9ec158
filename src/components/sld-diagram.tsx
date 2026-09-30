@@ -398,7 +398,7 @@ export function SldSvg({ m }: { m: SldModel }) {
 }
 
 /** شاشة المخطط الأحادي الرسمي داخل التطبيق مع تكبير وتحريك وتحميل. */
-export default function SldDiagram({ params, number }: Props) {
+export default function SldDiagram({ params, number, actions }: Props) {
   const model = useMemo(() => buildSld(params), [params]);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
