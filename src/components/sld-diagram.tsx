@@ -533,14 +533,43 @@ export default function SldDiagram({ params, number }: Props) {
         </ul>
       )}
 
-      <button
-        type="button"
-        onClick={() => downloadSldSheet(model, number)}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-black text-brand-foreground shadow-md transition hover:opacity-90"
-      >
-        <Download className="size-4" />
-        تحميل المخطط الرسمي
-      </button>
+      {actions ? (
+        <div className="mt-5 grid gap-2 border-t border-border pt-4 sm:grid-cols-3">
+          <button
+            type="button"
+            onClick={actions.onBackToQuote}
+            className="flex items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-3 text-xs font-black text-navy transition hover:border-brand hover:text-brand"
+          >
+            <ArrowRight className="size-4" /> العودة إلى عرض السعر
+          </button>
+          <button
+            type="button"
+            onClick={actions.onBuy}
+            className="flex items-center justify-center gap-2 rounded-full bg-energy px-4 py-3 text-xs font-black text-energy-foreground transition hover:opacity-90"
+          >
+            <ShoppingCart className="size-4" /> متابعة الشراء
+          </button>
+          {actions.onStudy && (
+            <button
+              type="button"
+              onClick={actions.onStudy}
+              className="flex items-center justify-center gap-2 rounded-full bg-skyline px-4 py-3 text-xs font-black text-skyline-foreground transition hover:opacity-90"
+            >
+              <LineChart className="size-4" /> الانتقال لدراسة PVsyst
+            </button>
+          )}
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => downloadSldSheet(model, number)}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-black text-brand-foreground shadow-md transition hover:opacity-90"
+        >
+          <Download className="size-4" />
+          تحميل المخطط الرسمي
+        </button>
+      )}
+
     </section>
   );
 }
