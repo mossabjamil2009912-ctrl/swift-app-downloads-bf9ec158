@@ -162,11 +162,21 @@ function CategoryView({ category, onOpen, onBack }: { category: ProductCategory;
 }
 
 function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void }) {
+  // نبدأ تحضير الشرح الصوتي قبل فتح المنتج، حتى ينطلق مع الفيديو بلا انتظار.
+  const warm = () => {
+    const v = getProductVideo(product.id);
+    if (v) prepareSpeech(videoIntroNarration(product, v), true);
+  };
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card text-right shadow-sm transition hover:shadow-md">
-      <button type="button" onClick={onOpen} aria-label={product.name} className="block aspect-[4/5] w-full overflow-hidden bg-background">
+    <article
+      onPointerEnter={warm}
+      onTouchStart={warm}
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card text-right shadow-sm transition hover:shadow-md"
+    >
+      <button type="button" onClick={() => { warm(); onOpen(); }} aria-label={product.name} className="block aspect-[4/5] w-full overflow-hidden bg-background">
         <img src={product.image} alt={product.name} loading="lazy" decoding="async" width={800} height={1000} className="size-full scale-105 object-contain p-1 transition duration-500 group-hover:scale-110" />
       </button>
+
       <div className="flex flex-1 flex-col gap-0.5 border-t border-border/70 px-2.5 pb-2.5 pt-2">
         <span className="text-[9px] font-bold text-skyline lg:text-[10px]">{product.brand}</span>
         <h3 className="line-clamp-2 text-[10.5px] font-bold leading-tight text-navy lg:text-[12px]">{product.name}</h3>
